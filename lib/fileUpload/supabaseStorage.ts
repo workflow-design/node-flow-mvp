@@ -5,6 +5,13 @@ const BUCKET_NAME = "media";
 
 export const supabaseFileStorage: FileStorage = {
   async upload(file: File): Promise<FileUploadResult> {
+    console.log("[Supabase Upload] Starting upload:", {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      bucket: BUCKET_NAME,
+    });
+
     const fileId = crypto.randomUUID();
     const fileExt = file.name.split(".").pop();
     const fileName = `${fileId}.${fileExt}`;
@@ -17,8 +24,14 @@ export const supabaseFileStorage: FileStorage = {
       });
 
     if (error) {
+      console.error("[Supabase Upload] Upload failed:", {
+        error: error.message,
+        fileName,
+      });
       throw new Error(`Failed to upload file: ${error.message}`);
     }
+
+    console.log("[Supabase Upload] Upload successful:", fileName);
 
     const {
       data: { publicUrl },
@@ -36,12 +49,15 @@ export const supabaseFileStorage: FileStorage = {
   },
 
   async delete(fileId: string): Promise<void> {
-    const { error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .remove([fileId]);
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([fileId]);
 
     if (error) {
-      console.error("Failed to delete file from Supabase:", error);
+      console.error("[Supabase Delete] Failed to delete file:", {
+        fileId,
+        error: error.message,
+      });
+    } else {
+      console.log("[Supabase Delete] File deleted successfully:", fileId);
     }
   },
 };
