@@ -73,6 +73,30 @@ export function useNodeInputs(nodeId: string) {
           sourceNodeId: sourceNode.id,
           items: data.items as string[],
         };
+      } else if (
+        // Check for text node with resolved items (templated text with list input)
+        sourceType === "text" &&
+        Array.isArray(data.resolvedItems) &&
+        data.resolvedItems.length > 0
+      ) {
+        inputs[handleId] = {
+          value:
+            typeof data.resolvedValue === "string" ? data.resolvedValue : "",
+          sourceType,
+          sourceNodeId: sourceNode.id,
+          items: data.resolvedItems as string[],
+        };
+      } else if (
+        // Text node with single resolved value
+        sourceType === "text" &&
+        typeof data.resolvedValue === "string" &&
+        data.resolvedValue
+      ) {
+        inputs[handleId] = {
+          value: data.resolvedValue,
+          sourceType,
+          sourceNodeId: sourceNode.id,
+        };
       } else if (typeof data.value === "string" && data.value) {
         inputs[handleId] = {
           value: data.value,

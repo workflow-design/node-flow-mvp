@@ -22,17 +22,22 @@ type BatchExecutionOptions = {
 export function useBatchExecution() {
   const { setNodes } = useReactFlow();
   const cancelledRef = useRef(false);
+  const completedCountRef = useRef(0);
+  const resultsRef = useRef<(OutputGalleryOutput | null)[]>([]);
 
   const updateGalleryNode = useCallback(
     (
       galleryNodeId: string,
-      updates: Partial<OutputGalleryNodeData> | ((data: OutputGalleryNodeData) => Partial<OutputGalleryNodeData>)
+      updates:
+        | Partial<OutputGalleryNodeData>
+        | ((data: OutputGalleryNodeData) => Partial<OutputGalleryNodeData>)
     ) => {
       setNodes((nodes) =>
         nodes.map((node) => {
           if (node.id !== galleryNodeId) return node;
           const currentData = node.data as OutputGalleryNodeData;
-          const newUpdates = typeof updates === "function" ? updates(currentData) : updates;
+          const newUpdates =
+            typeof updates === "function" ? updates(currentData) : updates;
           return { ...node, data: { ...currentData, ...newUpdates } };
         })
       );
@@ -49,6 +54,8 @@ export function useBatchExecution() {
       onComplete,
     }: BatchExecutionOptions) => {
       cancelledRef.current = false;
+      completedCountRef.current = 0;
+      resultsRef.current = new Array(items.length).fill(null);
       const total = items.length;
 
       // Initialize gallery if connected
@@ -60,62 +67,68 @@ export function useBatchExecution() {
         });
       }
 
-      const results: OutputGalleryOutput[] = [];
+      // Launch all executions in parallel, update progress as each completes
+      await Promise.all(
+        items.map(async (inputValue, index) => {
+          let output: OutputGalleryOutput;
 
-      for (let i = 0; i < items.length; i++) {
-        if (cancelledRef.current) {
-          break;
-        }
+          try {
+            const result = await executeModel(inputValue);
 
-        const inputValue = items[i];
-        let output: OutputGalleryOutput;
-
-        try {
-          const result = await executeModel(inputValue);
-
-          // Extract thumbnail for videos
-          let thumbnail: string | undefined;
-          if (result.type === "video") {
-            try {
-              thumbnail = await extractVideoThumbnail(result.url);
-            } catch (e) {
-              console.warn("Failed to extract video thumbnail:", e);
+            // Extract thumbnail for videos
+            let thumbnail: string | undefined;
+            if (result.type === "video") {
+              try {
+                thumbnail = await extractVideoThumbnail(result.url);
+              } catch (e) {
+                console.warn("Failed to extract video thumbnail:", e);
+              }
             }
+
+            output = {
+              type: result.type,
+              url: result.url,
+              inputValue,
+              thumbnail,
+            };
+          } catch (error) {
+            output = {
+              type: "image",
+              url: "",
+              inputValue,
+              error: error instanceof Error ? error.message : "Unknown error",
+            };
           }
 
-          output = {
-            type: result.type,
-            url: result.url,
-            inputValue,
-            thumbnail,
-          };
-        } catch (error) {
-          output = {
-            type: "image",
-            url: "",
-            inputValue,
-            error: error instanceof Error ? error.message : "Unknown error",
-          };
-        }
+          if (cancelledRef.current) return;
 
-        results.push(output);
+          // Store result at original index to maintain order
+          resultsRef.current[index] = output;
+          completedCountRef.current++;
 
-        // Update gallery with ALL results so far (use local array to avoid stale state)
-        if (galleryNodeId) {
-          updateGalleryNode(galleryNodeId, {
-            outputs: [...results],
-            progress: { current: i + 1, total },
-          });
-        }
+          // Update gallery with completed results
+          if (galleryNodeId) {
+            const completedResults = resultsRef.current.filter(
+              (r): r is OutputGalleryOutput => r !== null
+            );
+            updateGalleryNode(galleryNodeId, {
+              outputs: completedResults,
+              progress: { current: completedCountRef.current, total },
+            });
+          }
 
-        onProgress?.(i + 1, total);
-      }
+          onProgress?.(completedCountRef.current, total);
+        })
+      );
 
       // Final update with complete status - use flushSync to ensure it commits
-      if (galleryNodeId) {
+      if (galleryNodeId && !cancelledRef.current) {
+        const finalResults = resultsRef.current.filter(
+          (r): r is OutputGalleryOutput => r !== null
+        );
         flushSync(() => {
           updateGalleryNode(galleryNodeId, {
-            outputs: [...results],
+            outputs: finalResults,
             status: "complete",
             progress: { current: total, total },
           });
@@ -124,7 +137,9 @@ export function useBatchExecution() {
 
       onComplete?.();
 
-      return results;
+      return resultsRef.current.filter(
+        (r): r is OutputGalleryOutput => r !== null
+      );
     },
     [updateGalleryNode]
   );

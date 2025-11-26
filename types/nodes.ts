@@ -11,7 +11,11 @@ export type NodeType =
 
 export type TextNodeData = {
   label: string;
-  value: string;
+  value: string; // Raw template text with {variables}
+  resolvedValue: string; // Interpolated output (single string)
+  resolvedItems: string[]; // All interpolated strings (when list connected)
+  templateVariables: string[]; // Detected variable names for handle rendering
+  templateError?: string; // Error message (e.g., multiple lists)
 };
 
 export type ImageNodeData = {

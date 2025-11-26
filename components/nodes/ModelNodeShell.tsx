@@ -43,15 +43,30 @@ function StatusIndicator({
   };
 
   const config = statusConfig[status];
-  const label =
-    status === "running" && batchProgress
-      ? `${batchProgress.current}/${batchProgress.total}`
-      : config.label;
+
+  // Show progress bar for batch execution
+  if (status === "running" && batchProgress) {
+    const percent = (batchProgress.current / batchProgress.total) * 100;
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className={`h-2 w-2 rounded-full ${config.color}`} />
+          {batchProgress.current}/{batchProgress.total}
+        </div>
+        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-300"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
       <span className={`h-2 w-2 rounded-full ${config.color}`} />
-      {label}
+      {config.label}
     </div>
   );
 }

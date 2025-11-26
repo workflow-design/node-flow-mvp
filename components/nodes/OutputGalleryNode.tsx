@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import { Handle, Position, useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { OutputGalleryNodeData, OutputGalleryOutput } from "@/types/nodes";
@@ -158,12 +159,22 @@ export function OutputGalleryNode({ id, data }: NodeProps<OutputGalleryNodeData>
 
         {/* Footer */}
         <div className="border-t border-gray-200 px-3 py-2 dark:border-gray-700">
-          <div className="mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="mb-2 text-xs text-gray-500 dark:text-gray-400">
             {data.status === "running" ? (
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
-                {data.progress.current}/{data.progress.total} complete
-              </span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
+                  Running in parallel: {data.progress.current}/{data.progress.total} complete
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                    style={{
+                      width: `${data.progress.total > 0 ? (data.progress.current / data.progress.total) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
             ) : (
               <span>
                 Outputs: {successCount}
@@ -192,82 +203,84 @@ export function OutputGalleryNode({ id, data }: NodeProps<OutputGalleryNodeData>
         </div>
       </div>
 
-      {/* Lightbox modal */}
-      {selectedOutput && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          onClick={() => setSelectedOutput(null)}
-        >
+      {/* Lightbox modal - rendered via portal to escape React Flow's transform */}
+      {selectedOutput &&
+        createPortal(
           <div
-            className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg bg-white dark:bg-gray-900"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            onClick={() => setSelectedOutput(null)}
           >
-            <button
-              onClick={() => setSelectedOutput(null)}
-              className="absolute right-2 top-2 z-10 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
-              aria-label="Close"
+            <div
+              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg bg-white dark:bg-gray-900"
+              onClick={(e) => e.stopPropagation()}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <button
+                onClick={() => setSelectedOutput(null)}
+                className="absolute right-2 top-2 z-10 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                aria-label="Close"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-
-            {selectedOutput.error ? (
-              <div className="flex h-64 w-96 flex-col items-center justify-center gap-2 p-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-red-500"
+                  className="h-5 w-5"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Generation failed
-                </p>
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+              </button>
+
+              {selectedOutput.error ? (
+                <div className="flex h-64 w-96 flex-col items-center justify-center gap-2 p-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-red-500"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Generation failed
+                  </p>
+                  <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+                    Input: {selectedOutput.inputValue}
+                  </p>
+                  <p className="text-center text-xs text-red-500">
+                    {selectedOutput.error}
+                  </p>
+                </div>
+              ) : selectedOutput.type === "video" ? (
+                <video
+                  src={selectedOutput.url}
+                  controls
+                  autoPlay
+                  className="max-h-[85vh] max-w-[85vw]"
+                />
+              ) : (
+                <img
+                  src={selectedOutput.url}
+                  alt={`Generated from: ${selectedOutput.inputValue}`}
+                  className="max-h-[85vh] max-w-[85vw]"
+                />
+              )}
+
+              <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Input: {selectedOutput.inputValue}
                 </p>
-                <p className="text-center text-xs text-red-500">
-                  {selectedOutput.error}
-                </p>
               </div>
-            ) : selectedOutput.type === "video" ? (
-              <video
-                src={selectedOutput.url}
-                controls
-                autoPlay
-                className="max-h-[85vh] max-w-[85vw]"
-              />
-            ) : (
-              <img
-                src={selectedOutput.url}
-                alt={`Generated from: ${selectedOutput.inputValue}`}
-                className="max-h-[85vh] max-w-[85vw]"
-              />
-            )}
-
-            <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Input: {selectedOutput.inputValue}
-              </p>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }

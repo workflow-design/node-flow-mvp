@@ -47,7 +47,13 @@ function getInitialDataForType(
 ): TextNodeData | ImageNodeData | VideoNodeData | ListNodeData | FluxDevNodeData | Veo3FastNodeData | OutputGalleryNodeData {
   switch (type) {
     case "text":
-      return { label: "Text", value: "" };
+      return {
+        label: "Text",
+        value: "",
+        resolvedValue: "",
+        resolvedItems: [],
+        templateVariables: [],
+      };
     case "image":
       return { label: "Image", value: "", fileId: null, source: null };
     case "video":

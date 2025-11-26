@@ -306,4 +306,46 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Phase 5b: Template Variables in TextNode
+
+**Decision:** Add template variable support to TextNode using `{variableName}` syntax with dynamic input handles.
+
+**Context:** Phase 5b enables TextNode to accept inputs from other nodes and use them as template variables, allowing template strings like "A close up shot of moisture on the {fruit}" to be resolved dynamically.
+
+**Key Choices:**
+
+1. **Template Syntax:** `{variableName}` with alphanumeric + underscore names
+   - Rationale: Familiar syntax (similar to Python f-strings, Mustache templates)
+   - Consequence: Regex pattern `/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g`
+
+2. **Dynamic Input Handles:** Input handles appear/disappear based on detected variables
+   - Rationale: Variables in template text automatically become connectable inputs
+   - Consequence: Handle IDs match variable names for edge targeting
+
+3. **Output Data Structure:** Store both `resolvedValue` (string) and `resolvedItems` (string[])
+   - Rationale: Mirrors ListNode pattern — downstream nodes check `items.length > 0` for batch mode
+   - Consequence: Model nodes don't need special handling for templated text nodes
+
+4. **Single List Input Limit:** Only one list input allowed per template
+   - Rationale: Multiple lists would require cartesian product (complex) or zip (confusing)
+   - Consequence: Error message shown if user connects multiple list nodes
+
+5. **Live Preview:** Show interpolated result or list variations below textarea
+   - Rationale: Immediate feedback improves UX
+   - Consequence: Slightly taller node when variables present
+
+**Files Modified:**
+- `lib/templateParser.ts` (new) — Pure parsing/interpolation functions
+- `types/nodes.ts` — Extended TextNodeData type
+- `hooks/useNodeInputs.ts` — Detect text nodes with resolvedItems
+- `components/nodes/TextNode.tsx` — Major rewrite with dynamic handles
+- `components/Canvas.tsx` — Updated initial data for text nodes
+
+**Consequences:**
+- TextNode can now receive inputs from TextNode, ListNode, or model node outputs
+- Templates enable dynamic prompt generation without duplicating text nodes
+- Batch execution works through templated TextNode (ListNode → TextNode → Model)
+
+---
+
 <!-- Add new decisions above this line -->
