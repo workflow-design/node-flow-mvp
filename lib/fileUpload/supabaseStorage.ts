@@ -31,7 +31,7 @@ export const supabaseFileStorage: FileStorage = {
     };
   },
 
-  revoke(_url: string): void {
+  revoke(): void {
     // No-op for Supabase - URLs don't need revoking
   },
 

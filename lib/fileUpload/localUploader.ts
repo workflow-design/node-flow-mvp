@@ -1,7 +1,7 @@
-import type { FileUploader, FileUploadResult } from "../fileUpload";
+import type { FileStorage, FileUploadResult } from "../fileUpload";
 import { saveFile, deleteFile } from "../fileStorage";
 
-export const localUploader: FileUploader = {
+export const localUploader: FileStorage = {
   async upload(file: File): Promise<FileUploadResult> {
     const fileId = crypto.randomUUID();
     await saveFile(fileId, file);
@@ -11,7 +11,7 @@ export const localUploader: FileUploader = {
   revoke(url: string): void {
     URL.revokeObjectURL(url);
   },
-  async deleteFile(fileId: string): Promise<void> {
+  async delete(fileId: string): Promise<void> {
     await deleteFile(fileId);
   },
 };
