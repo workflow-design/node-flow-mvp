@@ -20,16 +20,27 @@ import "reactflow/dist/style.css";
 import { TextNode } from "./nodes/TextNode";
 import { ImageNode } from "./nodes/ImageNode";
 import { VideoNode } from "./nodes/VideoNode";
+import { FluxDevNode } from "./nodes/FluxDevNode";
+import { Veo3FastNode } from "./nodes/Veo3FastNode";
 import { storage } from "@/lib/storage/index";
 import { loadFile, deleteFile } from "@/lib/fileStorage";
-import type { NodeType, TextNodeData, ImageNodeData, VideoNodeData } from "@/types/nodes";
+import type {
+  NodeType,
+  TextNodeData,
+  ImageNodeData,
+  VideoNodeData,
+  FluxDevNodeData,
+  Veo3FastNodeData,
+} from "@/types/nodes";
 
 let nodeId = 0;
 function getNodeId() {
   return `node_${nodeId++}`;
 }
 
-function getInitialDataForType(type: NodeType): TextNodeData | ImageNodeData | VideoNodeData {
+function getInitialDataForType(
+  type: NodeType
+): TextNodeData | ImageNodeData | VideoNodeData | FluxDevNodeData | Veo3FastNodeData {
   switch (type) {
     case "text":
       return { label: "Text", value: "" };
@@ -37,6 +48,10 @@ function getInitialDataForType(type: NodeType): TextNodeData | ImageNodeData | V
       return { label: "Image", value: "", fileId: null, source: null };
     case "video":
       return { label: "Video", value: "", fileId: null, source: null };
+    case "fluxDev":
+      return { label: "Flux Dev", status: "idle", output: null, error: null };
+    case "veo3Fast":
+      return { label: "Veo 3 Fast", status: "idle", output: null, error: null };
   }
 }
 
@@ -71,6 +86,8 @@ export function Canvas() {
       text: TextNode,
       image: ImageNode,
       video: VideoNode,
+      fluxDev: FluxDevNode,
+      veo3Fast: Veo3FastNode,
     }),
     []
   );

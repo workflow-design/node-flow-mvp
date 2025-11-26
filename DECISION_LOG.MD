@@ -209,4 +209,55 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Preview Deployments Over Production Protection
+
+**Decision:** Use Vercel preview deployments instead of deploying to production with password protection.
+
+**Context:** Need to protect Fal.ai API credits during MVP development.
+
+**Options Considered:**
+1. Password gate + rate limiting — Adds code complexity
+2. Preview deployments only — Simpler, URLs are less discoverable
+
+**Rationale:**
+- Preview deployment URLs are random and less discoverable
+- Single user (just me) for MVP, no need for shared access
+- Less code to maintain
+- Can add proper auth later when needed
+
+**Consequences:** Main production domain won't have the app deployed. Access via preview URLs only.
+
+**Vercel Configuration:**
+- Settings → Git → Ignored Build Step
+- Set to "Custom" with command: `[ "$VERCEL_GIT_COMMIT_REF" != "main" ]`
+- Skips builds on main branch, allows preview deployments on feature branches
+
+---
+
+### 2025-11-26 — Phase 4: Fal.ai Model Nodes Architecture
+
+**Decision:** Implement model nodes with extensible architecture: one node type per model, shared ModelNodeShell component, server-side API routes for Fal.ai calls.
+
+**Context:** Phase 4 adds AI model nodes (Flux for images, Veo for videos) that call Fal.ai APIs.
+
+**Key Choices:**
+1. **Fal.ai Client:** Use `@fal-ai/client` (new package) instead of deprecated `@fal-ai/serverless-client`
+2. **Flux Model:** `fal-ai/flux/dev` — 12B parameter model, good quality/speed balance
+3. **Veo Model:** `fal-ai/veo3/fast` for text-to-video, `fal-ai/veo3/fast/image-to-video` when image input provided
+4. **Extensible Architecture:** One node component per model with shared ModelNodeShell wrapper
+5. **API Pattern:** Server-side Next.js API routes proxy Fal.ai calls to keep API key secure
+
+**Rationale:**
+- One node per model gives users explicit control over which model they use
+- ModelNodeShell extracts common UI (status indicator, run button, handles) for consistency
+- Server-side API routes keep FAL_KEY secure (never exposed to client)
+- Adding new models requires: new node type, new API route, new node component
+
+**Consequences:**
+- 7 new files created for the model node system
+- Sidebar reorganized into "Data" and "Models" sections
+- Model node outputs can connect to downstream nodes via output handle
+
+---
+
 <!-- Add new decisions above this line -->
