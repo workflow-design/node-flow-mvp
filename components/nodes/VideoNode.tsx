@@ -5,7 +5,7 @@ import { Handle, Position, useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { VideoNodeData } from "@/types/nodes";
 import { DropZone } from "./DropZone";
-import { fileUploader } from "@/lib/fileUpload/index";
+import { fileStorage } from "@/lib/fileUpload/index";
 
 const SIZE_WARNING_THRESHOLD = 100 * 1024 * 1024; // 100MB
 
@@ -25,9 +25,9 @@ export function VideoNode({ id, data }: NodeProps<VideoNodeData>) {
 
       // Delete old file if replacing
       if (data.fileId) {
-        fileUploader.deleteFile(data.fileId);
+        fileStorage.delete(data.fileId);
       }
-      const result = await fileUploader.upload(file);
+      const result = await fileStorage.upload(file);
       setNodes((nodes) =>
         nodes.map((node) =>
           node.id === id
@@ -41,10 +41,10 @@ export function VideoNode({ id, data }: NodeProps<VideoNodeData>) {
 
   const handleRemove = useCallback(() => {
     if (data.value && data.source === "local") {
-      fileUploader.revoke(data.value);
+      fileStorage.revoke(data.value);
     }
     if (data.fileId) {
-      fileUploader.deleteFile(data.fileId);
+      fileStorage.delete(data.fileId);
     }
     setSizeWarning(null);
     setNodes((nodes) =>

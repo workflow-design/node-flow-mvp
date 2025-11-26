@@ -1,4 +1,5 @@
 import { fal } from "@/lib/fal";
+import { uploadToSupabase } from "@/lib/uploadToSupabase";
 import { NextResponse } from "next/server";
 
 interface RequestBody {
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ imageUrl: result.data.images[0].url });
+    const falImageUrl = result.data.images[0].url;
+    console.log("Flux API: downloading and uploading to Supabase...");
+
+    // Download from Fal.ai and upload to Supabase
+    const supabaseUrl = await uploadToSupabase(falImageUrl, "png");
+    console.log("Flux API: uploaded to Supabase:", supabaseUrl);
+
+    return NextResponse.json({ imageUrl: supabaseUrl });
   } catch (error) {
     console.error("Flux API error:", error);
     const message = error instanceof Error ? error.message : String(error);

@@ -23,7 +23,7 @@ import { VideoNode } from "./nodes/VideoNode";
 import { FluxDevNode } from "./nodes/FluxDevNode";
 import { Veo3FastNode } from "./nodes/Veo3FastNode";
 import { storage } from "@/lib/storage/index";
-import { loadFile, deleteFile } from "@/lib/fileStorage";
+import { fileStorage } from "@/lib/fileUpload/index";
 import type {
   NodeType,
   TextNodeData,
@@ -40,7 +40,12 @@ function getNodeId() {
 
 function getInitialDataForType(
   type: NodeType
-): TextNodeData | ImageNodeData | VideoNodeData | FluxDevNodeData | Veo3FastNodeData {
+):
+  | TextNodeData
+  | ImageNodeData
+  | VideoNodeData
+  | FluxDevNodeData
+  | Veo3FastNodeData {
   switch (type) {
     case "text":
       return { label: "Text", value: "" };
@@ -53,22 +58,6 @@ function getInitialDataForType(
     case "veo3Fast":
       return { label: "Veo 3 Fast", status: "idle", output: null, error: null };
   }
-}
-
-async function restoreFileUrls(nodes: Node[]): Promise<Node[]> {
-  return Promise.all(
-    nodes.map(async (node) => {
-      const data = node.data;
-      if (data && typeof data === "object" && "fileId" in data && data.fileId) {
-        const blob = await loadFile(data.fileId);
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          return { ...node, data: { ...data, value: url } };
-        }
-      }
-      return node;
-    })
-  );
 }
 
 const SAVE_DEBOUNCE_MS = 500;
@@ -97,9 +86,8 @@ export function Canvas() {
     async function loadWorkflow() {
       const saved = await storage.load();
       if (saved) {
-        // Restore blob URLs from IndexedDB
-        const nodesWithUrls = await restoreFileUrls(saved.nodes);
-        setNodes(nodesWithUrls);
+        // Supabase URLs are persistent, no restoration needed
+        setNodes(saved.nodes);
         setEdges(saved.edges);
         // Update nodeId to avoid collisions
         const maxId = saved.nodes.reduce((max: number, node: Node) => {
@@ -139,13 +127,18 @@ export function Canvas() {
   // Handle node changes and cleanup files on deletion
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      // Clean up files from IndexedDB when nodes are deleted
+      // Clean up files from Supabase when nodes are deleted
       for (const change of changes) {
         if (change.type === "remove") {
           const node = nodes.find((n) => n.id === change.id);
           const data = node?.data;
-          if (data && typeof data === "object" && "fileId" in data && data.fileId) {
-            deleteFile(data.fileId);
+          if (
+            data &&
+            typeof data === "object" &&
+            "fileId" in data &&
+            data.fileId
+          ) {
+            fileStorage.delete(data.fileId);
           }
         }
       }
@@ -170,7 +163,9 @@ export function Canvas() {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData("application/reactflow") as NodeType;
+      const type = event.dataTransfer.getData(
+        "application/reactflow"
+      ) as NodeType;
 
       if (!type) {
         return;

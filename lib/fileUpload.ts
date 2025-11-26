@@ -4,8 +4,8 @@ export interface FileUploadResult {
   source: "local";
 }
 
-export interface FileUploader {
+export interface FileStorage {
   upload(file: File): Promise<FileUploadResult>;
   revoke(url: string): void;
-  deleteFile(fileId: string): Promise<void>;
+  delete(fileId: string): Promise<void>;
 }

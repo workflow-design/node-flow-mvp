@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:supabase": "supabase start",
+    "dev:stop": "supabase stop",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@fal-ai/client": "^1.7.2",
+    "@supabase/supabase-js": "^2.85.0",
     "next": "16.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",

@@ -1,4 +1,5 @@
 import { fal } from "@/lib/fal";
+import { uploadToSupabase } from "@/lib/uploadToSupabase";
 import { NextResponse } from "next/server";
 
 interface RequestBody {
@@ -43,7 +44,14 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ videoUrl: result.data.video.url });
+    const falVideoUrl = result.data.video.url;
+    console.log("Veo3 API: downloading and uploading to Supabase...");
+
+    // Download from Fal.ai and upload to Supabase
+    const supabaseUrl = await uploadToSupabase(falVideoUrl, "mp4");
+    console.log("Veo3 API: uploaded to Supabase:", supabaseUrl);
+
+    return NextResponse.json({ videoUrl: supabaseUrl });
   } catch (error) {
     console.error("Veo3 API error:", error);
     const message = error instanceof Error ? error.message : String(error);

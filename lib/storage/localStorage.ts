@@ -4,17 +4,9 @@ const STORAGE_KEY = "node-flow-mvp-workflow";
 
 export const localStorageAdapter: WorkflowStorage = {
   async save(data: WorkflowData): Promise<void> {
-    const sanitized: WorkflowData = {
-      nodes: data.nodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          value: node.data.source === "local" ? "" : node.data.value,
-        },
-      })),
-      edges: data.edges,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+    // Now using Supabase storage - all URLs are persistent HTTP URLs
+    // (no more blob URLs that need to be cleared)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   },
 
   async load(): Promise<WorkflowData | null> {

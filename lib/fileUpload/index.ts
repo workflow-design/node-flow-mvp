@@ -1,1 +1,1 @@
-export { localUploader as fileUploader } from "./localUploader";
+export { supabaseFileStorage as fileStorage } from "./supabaseStorage";
