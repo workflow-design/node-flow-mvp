@@ -60,4 +60,39 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Node Creation UI: Sidebar Palette
+
+**Decision:** Use a sidebar palette with drag-and-drop for node creation.
+
+**Context:** Phase 2 requires a way for users to add nodes to the canvas.
+
+**Options Considered:**
+1. Toolbar buttons — Simple but gets crowded with many node types
+2. Right-click context menu — Clean but less discoverable
+3. Sidebar palette (drag) — Scalable, familiar from Figma/Runway
+
+**Rationale:**
+- Scales well as we add more node types (Text, Image, Video, Flux, Veo)
+- Drag-and-drop is intuitive and matches workflow tools like Runway
+- Shows available nodes at a glance for discoverability
+
+**Consequences:** Slightly more implementation work than a simple button, but better UX foundation for Phase 3+.
+
+---
+
+### 2025-11-26 — React Flow State Management
+
+**Decision:** Use React Flow's built-in `useNodesState` and `useEdgesState` hooks.
+
+**Context:** Need to manage node and edge state for the canvas.
+
+**Rationale:**
+- Built-in hooks handle all node/edge operations (add, update, delete)
+- No need for external state management (Redux, Zustand) for MVP
+- Simple and recommended by React Flow documentation
+
+**Consequences:** State resets on page refresh (no persistence), which is acceptable for MVP scope.
+
+---
+
 <!-- Add new decisions above this line -->
