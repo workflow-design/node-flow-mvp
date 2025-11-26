@@ -70,8 +70,8 @@ export function ModelNodeShell({
               type="target"
               position={Position.Left}
               id={input.id}
-              className="!-left-[6px] !h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-              style={{ top: `${24 + index * 28}px` }}
+              className="!-left-[16px] !h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
+              style={{ top: `${4 + index * 12}px` }}
             />
             <span className="ml-1">
               {input.label}

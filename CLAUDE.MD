@@ -112,7 +112,7 @@ refactor(canvas): extract node connection logic to hook
 ### React Flow Nodes
 - Each node type gets its own file in `/components/nodes/`
 - Node components receive `NodeProps<NodeData>` 
-- Use handles for inputs (top) and outputs (bottom)
+- Use handles for inputs (left) and outputs (right) for left-to-right flow
 
 ### API Routes
 - Keep Fal.ai API key server-side only
