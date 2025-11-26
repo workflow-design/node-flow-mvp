@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -12,22 +12,130 @@ import ReactFlow, {
   type Connection,
   type Edge,
   type Node,
+  type NodeChange,
+  type NodeTypes,
 } from "reactflow";
 import "reactflow/dist/style.css";
+
+import { TextNode } from "./nodes/TextNode";
+import { ImageNode } from "./nodes/ImageNode";
+import { VideoNode } from "./nodes/VideoNode";
+import { storage } from "@/lib/storage/index";
+import { loadFile, deleteFile } from "@/lib/fileStorage";
+import type { NodeType, TextNodeData, ImageNodeData, VideoNodeData } from "@/types/nodes";
 
 let nodeId = 0;
 function getNodeId() {
   return `node_${nodeId++}`;
 }
 
-const initialNodes: Node[] = [];
-const initialEdges: Edge[] = [];
+function getInitialDataForType(type: NodeType): TextNodeData | ImageNodeData | VideoNodeData {
+  switch (type) {
+    case "text":
+      return { label: "Text", value: "" };
+    case "image":
+      return { label: "Image", value: "", fileId: null, source: null };
+    case "video":
+      return { label: "Video", value: "", fileId: null, source: null };
+  }
+}
+
+async function restoreFileUrls(nodes: Node[]): Promise<Node[]> {
+  return Promise.all(
+    nodes.map(async (node) => {
+      const data = node.data;
+      if (data && typeof data === "object" && "fileId" in data && data.fileId) {
+        const blob = await loadFile(data.fileId);
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          return { ...node, data: { ...data, value: url } };
+        }
+      }
+      return node;
+    })
+  );
+}
+
+const SAVE_DEBOUNCE_MS = 500;
 
 export function Canvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition } = useReactFlow();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoadedRef = useRef(false);
+
+  const nodeTypes: NodeTypes = useMemo(
+    () => ({
+      text: TextNode,
+      image: ImageNode,
+      video: VideoNode,
+    }),
+    []
+  );
+
+  // Load workflow from storage on mount
+  useEffect(() => {
+    async function loadWorkflow() {
+      const saved = await storage.load();
+      if (saved) {
+        // Restore blob URLs from IndexedDB
+        const nodesWithUrls = await restoreFileUrls(saved.nodes);
+        setNodes(nodesWithUrls);
+        setEdges(saved.edges);
+        // Update nodeId to avoid collisions
+        const maxId = saved.nodes.reduce((max: number, node: Node) => {
+          const match = node.id.match(/^node_(\d+)$/);
+          if (match) {
+            return Math.max(max, parseInt(match[1], 10));
+          }
+          return max;
+        }, -1);
+        nodeId = maxId + 1;
+      }
+      isLoadedRef.current = true;
+    }
+    loadWorkflow();
+  }, [setNodes, setEdges]);
+
+  // Debounced save to storage
+  const saveWorkflow = useCallback(
+    (currentNodes: Node[], currentEdges: Edge[]) => {
+      if (!isLoadedRef.current) return;
+
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        storage.save({ nodes: currentNodes, edges: currentEdges });
+      }, SAVE_DEBOUNCE_MS);
+    },
+    []
+  );
+
+  // Save on nodes/edges change
+  useEffect(() => {
+    saveWorkflow(nodes, edges);
+  }, [nodes, edges, saveWorkflow]);
+
+  // Handle node changes and cleanup files on deletion
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // Clean up files from IndexedDB when nodes are deleted
+      for (const change of changes) {
+        if (change.type === "remove") {
+          const node = nodes.find((n) => n.id === change.id);
+          const data = node?.data;
+          if (data && typeof data === "object" && "fileId" in data && data.fileId) {
+            deleteFile(data.fileId);
+          }
+        }
+      }
+      onNodesChange(changes);
+    },
+    [nodes, onNodesChange]
+  );
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -36,16 +144,16 @@ export function Canvas() {
     [setEdges]
   );
 
-  const onDragOver = useCallback((event: DragEvent) => {
+  const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
-    (event: DragEvent) => {
+    (event: React.DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData("application/reactflow");
+      const type = event.dataTransfer.getData("application/reactflow") as NodeType;
 
       if (!type) {
         return;
@@ -60,7 +168,7 @@ export function Canvas() {
         id: getNodeId(),
         type,
         position,
-        data: { label: `Node ${nodeId}` },
+        data: getInitialDataForType(type),
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -73,7 +181,8 @@ export function Canvas() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        nodeTypes={nodeTypes}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onDragOver={onDragOver}
