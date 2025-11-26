@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useReactFlow } from "reactflow";
 import type { OutputGalleryOutput, OutputGalleryNodeData } from "@/types/nodes";
 import { extractVideoThumbnail } from "@/lib/videoThumbnail";
@@ -99,21 +100,25 @@ export function useBatchExecution() {
 
         results.push(output);
 
-        // Update gallery with new output
+        // Update gallery with ALL results so far (use local array to avoid stale state)
         if (galleryNodeId) {
-          updateGalleryNode(galleryNodeId, (data) => ({
-            outputs: [...data.outputs, output],
+          updateGalleryNode(galleryNodeId, {
+            outputs: [...results],
             progress: { current: i + 1, total },
-          }));
+          });
         }
 
         onProgress?.(i + 1, total);
       }
 
-      // Mark complete
+      // Final update with complete status - use flushSync to ensure it commits
       if (galleryNodeId) {
-        updateGalleryNode(galleryNodeId, {
-          status: "complete",
+        flushSync(() => {
+          updateGalleryNode(galleryNodeId, {
+            outputs: [...results],
+            status: "complete",
+            progress: { current: total, total },
+          });
         });
       }
 
