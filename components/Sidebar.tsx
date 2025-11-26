@@ -61,6 +61,24 @@ const dataNodeTypes: NodeTypeConfig[] = [
       </svg>
     ),
   },
+  {
+    type: "list",
+    label: "List",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
 ];
 
 const modelNodeTypes: NodeTypeConfig[] = [
@@ -93,6 +111,23 @@ const modelNodeTypes: NodeTypeConfig[] = [
           d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z"
           clipRule="evenodd"
         />
+      </svg>
+    ),
+  },
+];
+
+const outputNodeTypes: NodeTypeConfig[] = [
+  {
+    type: "outputGallery",
+    label: "Gallery",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
       </svg>
     ),
   },
@@ -135,6 +170,11 @@ export function Sidebar() {
         Models
       </h2>
       <NodeList nodes={modelNodeTypes} />
+
+      <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        Output
+      </h2>
+      <NodeList nodes={outputNodeTypes} />
     </aside>
   );
 }

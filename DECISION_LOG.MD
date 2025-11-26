@@ -260,4 +260,50 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Phase 5: Batch Execution Architecture
+
+**Decision:** Implement batch processing with ListNode for inputs, OutputGalleryNode for outputs, sequential execution, and "Run All" button on model nodes.
+
+**Context:** Phase 5 adds batch processing to generate multiple outputs from a list of inputs.
+
+**Key Choices:**
+
+1. **Sequential Execution:** Run items one at a time instead of in parallel
+   - Rationale: Prevents Fal.ai rate limit issues
+   - Consequence: Slower but more reliable execution
+
+2. **Run All Button Location:** On the model node (Flux/Veo), not on ListNode or GalleryNode
+   - Rationale: Model node already has Run button; changing to "Run All (N items)" when list connected is intuitive
+   - Consequence: Model nodes need to detect list inputs
+
+3. **Max Items Limit:** 10 items maximum per list
+   - Rationale: Prevents runaway API costs during MVP
+   - Consequence: Users must batch larger sets manually
+
+4. **Video Thumbnails:** Extract first frame using canvas API
+   - Rationale: Better UX than placeholder icons
+   - Consequence: Small performance cost on batch completion
+
+5. **Cancel Button:** Replaces "Run All" during batch execution
+   - Rationale: Clear, direct cancellation UX
+   - Consequence: Keeps completed results when cancelled
+
+6. **Zip Library:** JSZip + file-saver for download all
+   - Rationale: Well-maintained, browser-native, no backend needed
+   - Consequence: Added ~100KB to bundle size
+
+**Files Added:**
+- `components/nodes/ListNode.tsx`
+- `components/nodes/OutputGalleryNode.tsx`
+- `hooks/useBatchExecution.ts`
+- `lib/downloadZip.ts`
+- `lib/videoThumbnail.ts`
+
+**Consequences:**
+- Sidebar now has three sections: Data, Models, Output
+- Model nodes detect list connections via enhanced useNodeInputs hook
+- Gallery node shows progress and allows download of all outputs
+
+---
+
 <!-- Add new decisions above this line -->
