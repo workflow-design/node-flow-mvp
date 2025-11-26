@@ -95,4 +95,118 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Phase 3: File Upload via Object URLs
+
+**Decision:** Use browser object URLs (blob URLs) for local file uploads in Image and Video nodes.
+
+**Context:** Phase 3 requires Image and Video nodes to accept file uploads.
+
+**Options Considered:**
+1. Cloud upload (S3, Cloudinary) — Persistent but adds complexity and cost
+2. Object URLs — Simple, works in-browser, no backend needed
+
+**Rationale:**
+- Simplest solution for MVP
+- No additional infrastructure or API keys needed
+- Files are available immediately after selection
+- Abstraction layer allows easy swap to cloud storage later
+
+**Consequences:** Object URLs don't persist across page refreshes. When saving to localStorage, local file values are cleared. This is acceptable for MVP.
+
+---
+
+### 2025-11-26 — Phase 3: localStorage Persistence
+
+**Decision:** Add workflow persistence via localStorage with 500ms debounced saves.
+
+**Context:** Users expect their work to persist across page refreshes.
+
+**Options Considered:**
+1. No persistence — Simplest but poor UX
+2. localStorage — Simple, no backend needed
+3. Database — Overkill for MVP
+
+**Rationale:**
+- Improves UX significantly with minimal implementation
+- 500ms debounce prevents excessive writes during rapid changes
+- Abstraction layer (WorkflowStorage interface) allows easy swap to database later
+
+**Consequences:** Object URLs for local files won't persist (cleared on save), but node positions, edges, and text values will persist.
+
+---
+
+### 2025-11-26 — Phase 3: Shared DropZone Component
+
+**Decision:** Create a reusable DropZone component for Image and Video nodes.
+
+**Context:** Both Image and Video nodes need file upload functionality.
+
+**Rationale:**
+- DRY principle — avoids duplicating drag-drop logic
+- Consistent UX across media nodes
+- Single place to add features (file size warnings, error handling)
+
+**Consequences:** Small abstraction added, but justified by code reuse.
+
+---
+
+### 2025-11-26 — Phase 3: Abstraction Layers
+
+**Decision:** Create FileUploader and WorkflowStorage interfaces with swappable implementations.
+
+**Context:** MVP uses simple implementations (object URLs, localStorage) but may need cloud services later.
+
+**Rationale:**
+- Single export point makes swapping implementations trivial
+- Interface contracts are minimal and focused
+- Small upfront cost for significant future flexibility
+
+**Consequences:** Slightly more files and indirection, but enables easy migration to cloud storage/upload.
+
+---
+
+### 2025-11-26 — Horizontal Node Handle Layout
+
+**Decision:** Use horizontal handle positioning (outputs on right, inputs on left) instead of vertical (outputs on bottom, inputs on top).
+
+**Context:** Needed to establish consistent handle placement convention for workflow nodes.
+
+**Options Considered:**
+1. Vertical layout (top/bottom) — Common in some tools but flows read top-to-bottom
+2. Horizontal layout (left/right) — Matches left-to-right reading direction
+
+**Rationale:**
+- Left-to-right flow matches natural reading direction for western users
+- Aligns with workflow tools like Runway, ComfyUI, and other node-based editors
+- Model nodes (Phase 4) will have inputs on left, outputs on right — creates clear data flow direction
+
+**Consequences:** All existing and future nodes must follow this convention. Source nodes (Text, Image, Video) only have right outputs; model nodes will have both left inputs and right outputs.
+
+---
+
+### 2025-11-26 — IndexedDB for File Blob Persistence
+
+**Decision:** Use IndexedDB to persist file blobs, with blob URLs regenerated on page load.
+
+**Context:** Users expected uploaded images/videos to persist across page refresh, but blob URLs are temporary and don't survive refresh.
+
+**Options Considered:**
+1. Base64 encoding in localStorage — Works but has size limits (~5MB), poor performance for large files
+2. Cloud storage (S3, etc.) — Persistent but adds backend complexity, cost, and latency
+3. IndexedDB — Large storage quota, good performance for binary data, no backend needed
+
+**Rationale:**
+- IndexedDB has much larger storage limits than localStorage
+- Better performance for binary data vs base64 encoding
+- Keeps the MVP purely client-side with no cloud infrastructure
+- Follows existing abstraction pattern (fileStorage layer matches fileUpload/storage layers)
+
+**Consequences:**
+- Files persist across page refresh
+- Node data types gain `fileId` field to reference IndexedDB entries
+- Blob URLs are regenerated on load (brief loading state shown)
+- Cleanup logic needed when nodes are deleted or files replaced
+
+---
+
 <!-- Add new decisions above this line -->
