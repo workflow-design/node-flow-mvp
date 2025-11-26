@@ -1,7 +1,16 @@
+"use client";
+
+import { ReactFlowProvider } from "reactflow";
+import { Canvas } from "@/components/Canvas";
+import { Sidebar } from "@/components/Sidebar";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">node-flow-mvp</h1>
+    <main className="flex h-screen w-screen overflow-hidden">
+      <ReactFlowProvider>
+        <Sidebar />
+        <Canvas />
+      </ReactFlowProvider>
     </main>
   );
 }
