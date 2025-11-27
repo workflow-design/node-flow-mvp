@@ -27,7 +27,7 @@ export function InputNode({ id, data }: NodeProps<InputNodeData>) {
   );
 
   return (
-    <div className="w-56 rounded-lg border-2 border-green-500 bg-white shadow-md dark:bg-gray-900">
+    <div className=" rounded-lg border-2 border-green-500 bg-white shadow-md dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center gap-2 rounded-t-md bg-green-500 px-3 py-2 text-sm font-medium text-white">
         <span>📥</span>

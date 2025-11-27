@@ -1,16 +1,5 @@
-"use client";
-
-import { ReactFlowProvider } from "reactflow";
-import { Canvas } from "@/components/Canvas";
-import { Sidebar } from "@/components/Sidebar";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <main className="flex h-screen w-screen overflow-hidden">
-      <ReactFlowProvider>
-        <Sidebar />
-        <Canvas />
-      </ReactFlowProvider>
-    </main>
-  );
+  redirect("/workflows/new");
 }

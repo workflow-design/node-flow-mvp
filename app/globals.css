@@ -32,3 +32,12 @@ body {
   padding: 0;
   overflow: hidden;
 }
+
+
+div.react-flow__node-default, div.react-flow__node-input, div.react-flow__node-output, div.react-flow__node-group {
+  border:0 ;
+  padding: 0;
+  width: auto;
+  font-size: inherit;
+  text-align: left;
+}

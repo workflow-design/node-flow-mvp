@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useImperativeHandle, forwardRef } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   addEdge,
   useEdgesState,
   useNodesState,
   useReactFlow,
   type Connection,
-  type Edge,
   type Node,
   type NodeChange,
   type NodeTypes,
@@ -26,7 +24,6 @@ import { Veo3FastNode } from "./nodes/Veo3FastNode";
 import { OutputGalleryNode } from "./nodes/OutputGalleryNode";
 import { InputNode } from "./nodes/InputNode";
 import { OutputNode } from "./nodes/OutputNode";
-import { storage } from "@/lib/storage/index";
 import { fileStorage } from "@/lib/fileUpload/index";
 import type {
   NodeType,
@@ -85,19 +82,26 @@ function getInitialDataForType(type: NodeType): AppNodeData {
   }
 }
 
-const SAVE_DEBOUNCE_MS = 500;
+export interface CanvasRef {
+  getGraph: () => WorkflowData;
+  markClean: () => void;
+}
 
 interface CanvasProps {
   initialGraph?: WorkflowGraph;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function Canvas({ initialGraph }: CanvasProps = {}) {
+export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
+  { initialGraph, onDirtyChange },
+  ref
+) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition } = useReactFlow();
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isLoadedRef = useRef(false);
+  const initialGraphRef = useRef<WorkflowData | null>(null);
 
   const nodeTypes: NodeTypes = useMemo(
     () => ({
@@ -114,21 +118,27 @@ export function Canvas({ initialGraph }: CanvasProps = {}) {
     []
   );
 
-  // Load workflow from storage on mount
+  // Expose imperative handle for parent to get graph and mark clean
+  useImperativeHandle(ref, () => ({
+    getGraph: () => ({ nodes, edges }),
+    markClean: () => {
+      initialGraphRef.current = { nodes, edges };
+    },
+  }), [nodes, edges]);
+
+  // Load workflow on mount
   useEffect(() => {
-    async function loadWorkflow() {
+    function loadWorkflow() {
       let saved: WorkflowData | null = null;
 
       if (initialGraph) {
         saved = { nodes: initialGraph.nodes, edges: initialGraph.edges };
-      } else {
-        saved = await storage.load();
       }
 
       if (saved) {
-        // Supabase URLs are persistent, no restoration needed
         setNodes(saved.nodes);
         setEdges(saved.edges);
+        initialGraphRef.current = saved;
         // Update nodeId to avoid collisions
         const maxId = saved.nodes.reduce((max: number, node: Node) => {
           const match = node.id.match(/^node_(\d+)$/);
@@ -138,31 +148,24 @@ export function Canvas({ initialGraph }: CanvasProps = {}) {
           return max;
         }, -1);
         nodeId = maxId + 1;
+      } else {
+        initialGraphRef.current = { nodes: [], edges: [] };
       }
       isLoadedRef.current = true;
     }
     loadWorkflow();
   }, [initialGraph, setNodes, setEdges]);
 
-  // Debounced save to storage
-  const saveWorkflow = useCallback(
-    (currentNodes: Node[], currentEdges: Edge[]) => {
-      if (!isLoadedRef.current) return;
-
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      saveTimeoutRef.current = setTimeout(() => {
-        storage.save({ nodes: currentNodes, edges: currentEdges });
-      }, SAVE_DEBOUNCE_MS);
-    },
-    []
-  );
-
-  // Save on nodes/edges change
+  // Track dirty state by comparing current graph to initial
   useEffect(() => {
-    saveWorkflow(nodes, edges);
-  }, [nodes, edges, saveWorkflow]);
+    if (!isLoadedRef.current || !initialGraphRef.current) return;
+
+    const isDirty =
+      JSON.stringify(nodes) !== JSON.stringify(initialGraphRef.current.nodes) ||
+      JSON.stringify(edges) !== JSON.stringify(initialGraphRef.current.edges);
+
+    onDirtyChange?.(isDirty);
+  }, [nodes, edges, onDirtyChange]);
 
   // Handle node changes and cleanup files on deletion
   const handleNodesChange = useCallback(
@@ -244,13 +247,7 @@ export function Canvas({ initialGraph }: CanvasProps = {}) {
       >
         <Background gap={16} size={1} />
         <Controls />
-        <MiniMap
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-          className="bg-neutral-100 dark:bg-neutral-800"
-        />
       </ReactFlow>
     </div>
   );
-}
+});
