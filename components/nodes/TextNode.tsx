@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
-import { Handle, Position, useReactFlow, useEdges } from "reactflow";
+import { Position, useReactFlow, useEdges } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { TextNodeData } from "@/types/nodes";
 import { useNodeInputs } from "@/hooks/useNodeInputs";
@@ -9,6 +9,7 @@ import {
   parseTemplateVariables,
   interpolateTemplateWithList,
 } from "@/lib/templateParser";
+import { TextHandle } from "./handles";
 
 export function TextNode({ id, data }: NodeProps<TextNodeData>) {
   const { setNodes } = useReactFlow();
@@ -145,11 +146,11 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
               key={varName}
               className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400"
             >
-              <Handle
-                type="target"
+              <TextHandle
+                handleType="target"
                 position={Position.Left}
                 id={varName}
-                className="!-left-[20px] !h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
+                className="!-left-[20px]"
                 style={{ top: `${12 + index * 0}px` }}
               />
               <span className="ml-1 font-mono text-gray-500 dark:text-gray-400">
@@ -211,11 +212,7 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
       )}
 
       {/* Output handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-      />
+      <TextHandle />
     </div>
   );
 }

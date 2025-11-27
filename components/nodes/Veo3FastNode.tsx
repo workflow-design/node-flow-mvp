@@ -10,8 +10,8 @@ import { ModelNodeShell } from "./ModelNodeShell";
 import { veo3FastGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [
-  { id: "prompt", label: "prompt", required: true },
-  { id: "image", label: "image (optional)", required: false },
+  { id: "prompt", label: "prompt", required: true, type: "text" as const },
+  { id: "image", label: "image (optional)", required: false, type: "image" as const },
 ];
 
 export function Veo3FastNode({ id, data }: NodeProps<Veo3FastNodeData>) {
@@ -112,6 +112,7 @@ export function Veo3FastNode({ id, data }: NodeProps<Veo3FastNodeData>) {
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">

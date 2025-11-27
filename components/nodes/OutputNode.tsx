@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useEffect } from "react";
-import { Handle, Position, useReactFlow, useEdges, useNodes } from "reactflow";
+import { Position, useReactFlow, useEdges, useNodes } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { OutputNodeData, OutputNodeOutputType, OutputGalleryOutput } from "@/types/nodes";
+import { AnyHandle } from "./handles";
 
 const OUTPUT_TYPES: { value: OutputNodeOutputType; label: string }[] = [
   { value: "string", label: "Text" },
@@ -142,12 +143,7 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
   return (
     <div className="w-56 rounded-lg border-2 border-red-500 bg-white shadow-md dark:bg-gray-900">
       {/* Input Handle */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="value"
-        className="!h-3 !w-3 !border-2 !border-white !bg-red-500"
-      />
+      <AnyHandle handleType="target" position={Position.Left} id="value" />
 
       {/* Header */}
       <div className="flex items-center gap-2 rounded-t-md bg-red-500 px-3 py-2 text-sm font-medium text-white">

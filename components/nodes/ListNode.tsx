@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState, type KeyboardEvent, type ClipboardEvent } from "react";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { ListNodeData } from "@/types/nodes";
+import { TextHandle } from "./handles";
 
 const MAX_ITEMS = 10;
 
@@ -202,11 +203,7 @@ export function ListNode({ id, data }: NodeProps<ListNodeData>) {
       </div>
 
       {/* Output handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-      />
+      <TextHandle />
     </div>
   );
 }

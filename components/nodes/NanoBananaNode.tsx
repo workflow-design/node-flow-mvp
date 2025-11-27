@@ -155,12 +155,15 @@ export function NanoBananaNode({ id, data }: NodeProps<NanoBananaNodeData>) {
 
   // Build the input handles array for ModelNodeShell
   const inputHandles = useMemo(() => {
-    const handles = [{ id: "prompt", label: "prompt", required: true }];
+    const handles: Array<{ id: string; label: string; required: boolean; type: "text" | "image" }> = [
+      { id: "prompt", label: "prompt", required: true, type: "text" },
+    ];
     computedImageHandles.forEach((handleId, index) => {
       handles.push({
         id: handleId,
         label: index === 0 ? "image" : `image ${index + 1}`,
         required: false,
+        type: "image",
       });
     });
     return handles;

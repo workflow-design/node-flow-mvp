@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback } from "react";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { ImageNodeData } from "@/types/nodes";
 import { DropZone } from "./DropZone";
 import { fileStorage } from "@/lib/fileUpload/index";
+import { ImageHandle } from "./handles";
 
 export function ImageNode({ id, data }: NodeProps<ImageNodeData>) {
   const { setNodes } = useReactFlow();
@@ -90,11 +91,7 @@ export function ImageNode({ id, data }: NodeProps<ImageNodeData>) {
         )}
       </div>
       {/* Output handle: Right side (convention: inputs=Left, outputs=Right) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-      />
+      <ImageHandle />
     </div>
   );
 }

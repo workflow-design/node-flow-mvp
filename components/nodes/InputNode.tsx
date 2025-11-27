@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { InputNodeData, InputNodeInputType } from "@/types/nodes";
+import { TextHandle, ImageHandle } from "./handles";
 
 const INPUT_TYPES: { value: InputNodeInputType; label: string }[] = [
   { value: "string", label: "Text" },
@@ -97,11 +98,7 @@ export function InputNode({ id, data }: NodeProps<InputNodeData>) {
       </div>
 
       {/* Output Handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-white !bg-green-500"
-      />
+      {data.inputType === "image" ? <ImageHandle /> : <TextHandle />}
     </div>
   );
 }

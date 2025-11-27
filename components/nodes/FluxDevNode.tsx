@@ -9,7 +9,7 @@ import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
 import { fluxDevGenerators } from "@/lib/workflow/executors";
 
-const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true }];
+const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true, type: "text" as const }];
 
 export function FluxDevNode({ id, data }: NodeProps<FluxDevNodeData>) {
   const { setNodes } = useReactFlow();

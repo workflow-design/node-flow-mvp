@@ -1,13 +1,17 @@
 "use client";
 
-import { Handle, Position } from "reactflow";
+import { Position } from "reactflow";
 import type { ModelNodeStatus } from "@/types/nodes";
 import type { ReactNode } from "react";
+import { TypedHandle, ImageHandle, VideoHandle } from "./handles";
+
+type HandleDataType = "text" | "image" | "video" | "any";
 
 export interface InputHandle {
   id: string;
   label: string;
   required?: boolean;
+  type?: HandleDataType;
 }
 
 interface BatchProgress {
@@ -26,6 +30,7 @@ interface ModelNodeShellProps {
   listItemCount?: number;
   batchProgress?: BatchProgress;
   children?: ReactNode;
+  outputType?: "image" | "video";
 }
 
 function StatusIndicator({
@@ -82,6 +87,7 @@ export function ModelNodeShell({
   listItemCount,
   batchProgress,
   children,
+  outputType = "image",
 }: ModelNodeShellProps) {
   const isRunning = status === "running";
   const isDisabled = disabled || isRunning;
@@ -100,34 +106,53 @@ export function ModelNodeShell({
   };
 
   return (
-    <div className="w-64 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className=" flex flex-col w-64 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* Header */}
       <div className="border-b border-gray-200 px-3 py-2 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {title}
         </span>
       </div>
-
-      {/* Input handles */}
-      <div className="relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
-        {inputs.map((input, index) => (
-          <div
-            key={input.id}
-            className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400"
-          >
-            <Handle
-              type="target"
-              position={Position.Left}
-              id={input.id}
-              className="!-left-[16px] !h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-              style={{ top: `${4 + index * 12}px` }}
-            />
-            <span className="ml-1">
-              {input.label}
-              {input.required && <span className="text-red-500">*</span>}
-            </span>
+      <div className="flex grow">
+        {/* Input handles */}
+        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Inputs
           </div>
-        ))}
+          {inputs.map((input, index) => (
+            <div
+              key={input.id}
+              className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400"
+            >
+              <TypedHandle
+                dataType={input.type ?? "text"}
+                handleType="target"
+                position={Position.Left}
+                id={input.id}
+                className="-left-[16px]!"
+              />
+              <span className="ml-1">
+                {input.label}
+                {input.required && <span className="text-red-500">*</span>}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Output handles */}
+        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Output
+          </div>
+          <div className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400">
+            {outputType === "video" ? (
+              <VideoHandle className="!-right-[16px]"  />
+            ) : (
+              <ImageHandle className="!-right-[16px]"  />
+            )}
+            <span className="ml-1">Result</span>
+          </div>
+        </div>
       </div>
 
       {/* Controls */}
@@ -162,11 +187,7 @@ export function ModelNodeShell({
       {children && <div className="p-3">{children}</div>}
 
       {/* Output handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-      />
+      {outputType === "video" ? <VideoHandle /> : <ImageHandle />}
     </div>
   );
 }

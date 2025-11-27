@@ -10,9 +10,9 @@ import { ModelNodeShell } from "./ModelNodeShell";
 import { veo31KeyframeGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [
-  { id: "prompt", label: "prompt", required: true },
-  { id: "firstFrame", label: "first frame", required: true },
-  { id: "lastFrame", label: "last frame", required: true },
+  { id: "prompt", label: "prompt", required: true, type: "text" as const },
+  { id: "firstFrame", label: "first frame", required: true, type: "image" as const },
+  { id: "lastFrame", label: "last frame", required: true, type: "image" as const },
 ];
 
 export function Veo31KeyframeNode({ id, data }: NodeProps<Veo31KeyframeNodeData>) {
@@ -111,6 +111,7 @@ export function Veo31KeyframeNode({ id, data }: NodeProps<Veo31KeyframeNodeData>
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">

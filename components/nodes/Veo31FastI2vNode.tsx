@@ -10,8 +10,8 @@ import { ModelNodeShell } from "./ModelNodeShell";
 import { veo31FastI2vGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [
-  { id: "prompt", label: "prompt", required: true },
-  { id: "image", label: "image", required: true },
+  { id: "prompt", label: "prompt", required: true, type: "text" as const },
+  { id: "image", label: "image", required: true, type: "image" as const },
 ];
 
 export function Veo31FastI2vNode({ id, data }: NodeProps<Veo31FastI2vNodeData>) {
@@ -109,6 +109,7 @@ export function Veo31FastI2vNode({ id, data }: NodeProps<Veo31FastI2vNodeData>) 
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">

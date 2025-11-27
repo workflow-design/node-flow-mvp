@@ -9,7 +9,7 @@ import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
 import { klingVideoGenerators } from "@/lib/workflow/executors";
 
-const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true }];
+const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true, type: "text" as const }];
 
 export function KlingVideoNode({ id, data }: NodeProps<KlingVideoNodeData>) {
   const { setNodes } = useReactFlow();
@@ -103,6 +103,7 @@ export function KlingVideoNode({ id, data }: NodeProps<KlingVideoNodeData>) {
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">

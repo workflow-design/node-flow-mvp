@@ -10,8 +10,8 @@ import { ModelNodeShell } from "./ModelNodeShell";
 import { veo31RefGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [
-  { id: "prompt", label: "prompt", required: true },
-  { id: "image", label: "reference image", required: true },
+  { id: "prompt", label: "prompt", required: true, type: "text" as const },
+  { id: "image", label: "reference image", required: true, type: "image" as const },
 ];
 
 export function Veo31RefNode({ id, data }: NodeProps<Veo31RefNodeData>) {
@@ -109,6 +109,7 @@ export function Veo31RefNode({ id, data }: NodeProps<Veo31RefNodeData>) {
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">

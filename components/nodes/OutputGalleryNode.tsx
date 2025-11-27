@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { Position, useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { OutputGalleryNodeData, OutputGalleryOutput } from "@/types/nodes";
 import { downloadAsZip } from "@/lib/downloadZip";
+import { AnyHandle } from "./handles";
 
 export function OutputGalleryNode({ id, data }: NodeProps<OutputGalleryNodeData>) {
   const { setNodes } = useReactFlow();
@@ -70,11 +71,7 @@ export function OutputGalleryNode({ id, data }: NodeProps<OutputGalleryNodeData>
 
         {/* Input handle section */}
         <div className="relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
-          <Handle
-            type="target"
-            position={Position.Left}
-            className="!-left-[16px] !h-3 !w-3 !border-2 !border-gray-300 !bg-white dark:!border-gray-600 dark:!bg-gray-800"
-          />
+          <AnyHandle handleType="target" position={Position.Left} className="!-left-[16px]" />
           <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">
             input
           </span>

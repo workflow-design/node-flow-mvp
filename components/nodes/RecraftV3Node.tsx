@@ -9,7 +9,7 @@ import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
 import { recraftV3Generators } from "@/lib/workflow/executors";
 
-const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true }];
+const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true, type: "text" as const }];
 
 export function RecraftV3Node({ id, data }: NodeProps<RecraftV3NodeData>) {
   const { setNodes } = useReactFlow();

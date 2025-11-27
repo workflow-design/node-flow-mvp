@@ -9,7 +9,7 @@ import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
 import { veo31FastGenerators } from "@/lib/workflow/executors";
 
-const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true }];
+const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true, type: "text" as const }];
 
 export function Veo31FastNode({ id, data }: NodeProps<Veo31FastNodeData>) {
   const { setNodes } = useReactFlow();
@@ -96,6 +96,7 @@ export function Veo31FastNode({ id, data }: NodeProps<Veo31FastNodeData>) {
       error={data.error}
       listItemCount={listItemCount}
       batchProgress={batchProgress}
+      outputType="video"
     >
       {data.output && (
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-700">
