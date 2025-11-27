@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useEffect } from "react";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { Handle, Position, useReactFlow, useEdges, useNodes } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { OutputNodeData, OutputNodeOutputType, OutputGalleryOutput } from "@/types/nodes";
 
@@ -22,7 +22,9 @@ type MediaPreview = {
 };
 
 export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
-  const { setNodes, getNodes, getEdges } = useReactFlow();
+  const { setNodes } = useReactFlow();
+  const edges = useEdges();
+  const nodes = useNodes();
 
   const updateNodeData = useCallback(
     (updates: Partial<OutputNodeData>) => {
@@ -37,8 +39,6 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
 
   // Infer output type from connected node
   const inferredType = useMemo((): OutputNodeOutputType | null => {
-    const edges = getEdges();
-    const nodes = getNodes();
     const incomingEdge = edges.find((e) => e.target === id);
 
     console.log("[OutputNode] Checking edges for node:", id);
@@ -90,7 +90,7 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
 
     console.log("[OutputNode] Inferred type:", result);
     return result;
-  }, [id, getNodes, getEdges]);
+  }, [id, edges, nodes]);
 
   // Auto-update output type when inferred type changes
   useEffect(() => {
@@ -103,8 +103,6 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
 
   // Get connected source node and determine preview type
   const preview = useMemo((): MediaPreview | null => {
-    const edges = getEdges();
-    const nodes = getNodes();
     const incomingEdge = edges.find((e) => e.target === id);
     if (!incomingEdge) return null;
 
@@ -148,7 +146,7 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
     }
 
     return null;
-  }, [id, getNodes, getEdges]);
+  }, [id, edges, nodes]);
 
   return (
     <div className="w-56 rounded-lg border-2 border-red-500 bg-white shadow-md dark:bg-gray-900">
