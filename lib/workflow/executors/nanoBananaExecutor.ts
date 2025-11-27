@@ -66,7 +66,28 @@ export function createNanoBananaExecutor(generateImage: ImageGenerator): NodeExe
 
       // Single execution
       try {
-        const url = await generateImage(promptInput.value);
+        // Collect image URLs from image_0, image_1, image_2, etc.
+        const imageUrls: string[] = [];
+        for (let i = 0; i < 10; i++) {
+          const imageInput = resolvedInputs[`image_${i}`];
+          if (imageInput?.value) {
+            imageUrls.push(imageInput.value);
+          }
+        }
+
+        // Log what we're sending to Fal.ai
+        console.log("[NanoBanana] Executing with:", {
+          prompt: promptInput.value,
+          imageUrls,
+          isEditMode: imageUrls.length > 0,
+          model: imageUrls.length > 0 ? "fal-ai/nano-banana/edit" : "fal-ai/nano-banana",
+        });
+
+        const url = await generateImage(
+          promptInput.value,
+          imageUrls.length > 0 ? imageUrls : undefined
+        );
+
         return {
           output: {
             value: url,
@@ -83,6 +104,7 @@ export function createNanoBananaExecutor(generateImage: ImageGenerator): NodeExe
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        console.error("[NanoBanana] Error:", message);
         return {
           output: { value: "", type: "image" },
           status: "failed",
@@ -108,7 +130,17 @@ export const nanoBananaGenerators = {
       ? { prompt, image_urls: imageUrls }
       : { prompt };
 
+    console.log("[NanoBanana Backend] Calling Fal.ai:", {
+      model,
+      input: JSON.stringify(input, null, 2),
+    });
+
     const result = await fal.subscribe(model, { input });
+
+    console.log("[NanoBanana Backend] Fal.ai response:", {
+      imageCount: result.data.images?.length ?? 0,
+      firstImageUrl: result.data.images?.[0]?.url,
+    });
 
     if (!result.data.images || result.data.images.length === 0) {
       throw new Error("No images generated");
@@ -116,6 +148,9 @@ export const nanoBananaGenerators = {
 
     const falImageUrl = result.data.images[0].url;
     const supabaseUrl = await uploadToSupabaseOrPassthrough(falImageUrl, "png");
+
+    console.log("[NanoBanana Backend] Uploaded to Supabase:", supabaseUrl);
+
     return supabaseUrl;
   },
 
