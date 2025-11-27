@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
-import { useReactFlow } from "reactflow";
+import { useCallback, useMemo, useRef } from "react";
+import { useReactFlow, useNodes, useEdges } from "reactflow";
 import type { NodeType } from "@/types/nodes";
 
 export type InputMeta = {
@@ -20,14 +20,19 @@ export type InputMeta = {
  * For list nodes: reads from `data.items`
  */
 export function useNodeInputs(nodeId: string) {
-  const { getNodes, getEdges } = useReactFlow();
+  const { getNodes: getNodesImperative, getEdges: getEdgesImperative } = useReactFlow();
+  const nodes = useNodes();
+  const edges = useEdges();
 
-  const getInputs = useCallback(() => {
-    const edges = getEdges();
-    const nodes = getNodes();
+  // Refs to track previous values for stable references
+  const inputsRef = useRef<Record<string, string>>({});
+  const inputsWithMetaRef = useRef<Record<string, InputMeta>>({});
+
+  // Memoized inputs that update when connected nodes change
+  const inputs = useMemo(() => {
     const incomingEdges = edges.filter((e) => e.target === nodeId);
 
-    const inputs: Record<string, string> = {};
+    const result: Record<string, string> = {};
 
     for (const edge of incomingEdges) {
       const sourceNode = nodes.find((n) => n.id === edge.source);
@@ -41,26 +46,32 @@ export function useNodeInputs(nodeId: string) {
 
       if (sourceType === "input" && typeof data.defaultValue === "string") {
         // Input node uses defaultValue for manual execution
-        inputs[handleId] = data.defaultValue;
+        result[handleId] = data.defaultValue;
       } else if (typeof data.value === "string" && data.value) {
-        inputs[handleId] = data.value;
+        result[handleId] = data.value;
       } else if (typeof data.output === "string" && data.output) {
-        inputs[handleId] = data.output;
+        result[handleId] = data.output;
       } else if (Array.isArray(data.items) && data.items.length > 0) {
         // For list nodes, use the first item as placeholder value for display
-        inputs[handleId] = data.items[0];
+        result[handleId] = data.items[0];
       }
     }
 
-    return inputs;
-  }, [nodeId, getNodes, getEdges]);
+    // Only return new reference if values actually changed
+    const prevJson = JSON.stringify(inputsRef.current);
+    const newJson = JSON.stringify(result);
+    if (prevJson !== newJson) {
+      inputsRef.current = result;
+    }
 
-  const getInputsWithMeta = useCallback(() => {
-    const edges = getEdges();
-    const nodes = getNodes();
+    return inputsRef.current;
+  }, [nodeId, nodes, edges]);
+
+  // Memoized inputs with metadata that update when connected nodes change
+  const inputsWithMeta = useMemo(() => {
     const incomingEdges = edges.filter((e) => e.target === nodeId);
 
-    const inputs: Record<string, InputMeta> = {};
+    const result: Record<string, InputMeta> = {};
 
     for (const edge of incomingEdges) {
       const sourceNode = nodes.find((n) => n.id === edge.source);
@@ -78,14 +89,14 @@ export function useNodeInputs(nodeId: string) {
             .split("\n")
             .map((s) => s.trim())
             .filter(Boolean);
-          inputs[handleId] = {
+          result[handleId] = {
             value: items.length > 0 ? items[0] : "",
             sourceType,
             sourceNodeId: sourceNode.id,
             items,
           };
         } else {
-          inputs[handleId] = {
+          result[handleId] = {
             value: data.defaultValue as string,
             sourceType,
             sourceNodeId: sourceNode.id,
@@ -93,7 +104,7 @@ export function useNodeInputs(nodeId: string) {
         }
       } else if (sourceType === "list" && Array.isArray(data.items)) {
         // Check for list node
-        inputs[handleId] = {
+        result[handleId] = {
           value: data.items.length > 0 ? data.items[0] : "",
           sourceType,
           sourceNodeId: sourceNode.id,
@@ -105,7 +116,7 @@ export function useNodeInputs(nodeId: string) {
         Array.isArray(data.resolvedItems) &&
         data.resolvedItems.length > 0
       ) {
-        inputs[handleId] = {
+        result[handleId] = {
           value:
             typeof data.resolvedValue === "string" ? data.resolvedValue : "",
           sourceType,
@@ -118,19 +129,19 @@ export function useNodeInputs(nodeId: string) {
         typeof data.resolvedValue === "string" &&
         data.resolvedValue
       ) {
-        inputs[handleId] = {
+        result[handleId] = {
           value: data.resolvedValue,
           sourceType,
           sourceNodeId: sourceNode.id,
         };
       } else if (typeof data.value === "string" && data.value) {
-        inputs[handleId] = {
+        result[handleId] = {
           value: data.value,
           sourceType,
           sourceNodeId: sourceNode.id,
         };
       } else if (typeof data.output === "string" && data.output) {
-        inputs[handleId] = {
+        result[handleId] = {
           value: data.output,
           sourceType,
           sourceNodeId: sourceNode.id,
@@ -138,25 +149,75 @@ export function useNodeInputs(nodeId: string) {
       }
     }
 
-    return inputs;
-  }, [nodeId, getNodes, getEdges]);
+    // Only return new reference if values actually changed
+    const prevJson = JSON.stringify(inputsWithMetaRef.current);
+    const newJson = JSON.stringify(result);
+    if (prevJson !== newJson) {
+      inputsWithMetaRef.current = result;
+    }
+
+    return inputsWithMetaRef.current;
+  }, [nodeId, nodes, edges]);
+
+  // Imperative getter for use in callbacks/effects that need fresh data
+  const getInputs = useCallback(() => {
+    const currentEdges = getEdgesImperative();
+    const currentNodes = getNodesImperative();
+    const incomingEdges = currentEdges.filter((e) => e.target === nodeId);
+
+    const result: Record<string, string> = {};
+
+    for (const edge of incomingEdges) {
+      const sourceNode = currentNodes.find((n) => n.id === edge.source);
+      if (!sourceNode?.data) continue;
+
+      const handleId = edge.targetHandle ?? "default";
+      const data = sourceNode.data as Record<string, unknown>;
+      const sourceType = sourceNode.type as NodeType;
+
+      if (sourceType === "input" && typeof data.defaultValue === "string") {
+        result[handleId] = data.defaultValue;
+      } else if (typeof data.value === "string" && data.value) {
+        result[handleId] = data.value;
+      } else if (typeof data.output === "string" && data.output) {
+        result[handleId] = data.output;
+      } else if (Array.isArray(data.items) && data.items.length > 0) {
+        result[handleId] = data.items[0];
+      }
+    }
+
+    return result;
+  }, [nodeId, getNodesImperative, getEdgesImperative]);
+
+  // Imperative getter with metadata
+  const getInputsWithMeta = useCallback(() => {
+    return inputsWithMeta;
+  }, [inputsWithMeta]);
 
   const findConnectedOutputGallery = useCallback((): string | null => {
-    const edges = getEdges();
-    const nodes = getNodes();
+    const currentEdges = getEdgesImperative();
+    const currentNodes = getNodesImperative();
 
     // Find edges going out from this node
-    const outgoingEdges = edges.filter((e) => e.source === nodeId);
+    const outgoingEdges = currentEdges.filter((e) => e.source === nodeId);
 
     for (const edge of outgoingEdges) {
-      const targetNode = nodes.find((n) => n.id === edge.target);
+      const targetNode = currentNodes.find((n) => n.id === edge.target);
       if (targetNode?.type === "outputGallery") {
         return targetNode.id;
       }
     }
 
     return null;
-  }, [nodeId, getNodes, getEdges]);
+  }, [nodeId, getNodesImperative, getEdgesImperative]);
 
-  return { getInputs, getInputsWithMeta, findConnectedOutputGallery };
+  return {
+    // Reactive memoized values - use these for render dependencies
+    inputs,
+    inputsWithMeta,
+    // Imperative getters - use these in callbacks/effects
+    getInputs,
+    getInputsWithMeta,
+    findConnectedOutputGallery,
+  };
 }

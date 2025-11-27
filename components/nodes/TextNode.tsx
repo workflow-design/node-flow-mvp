@@ -12,7 +12,7 @@ import {
 
 export function TextNode({ id, data }: NodeProps<TextNodeData>) {
   const { setNodes } = useReactFlow();
-  const { getInputsWithMeta } = useNodeInputs(id);
+  const { inputsWithMeta } = useNodeInputs(id);
   const edges = useEdges();
 
   // Update node data helper
@@ -65,12 +65,10 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
       return;
     }
 
-    const inputsMeta = getInputsWithMeta();
-
     // Build values map from connected inputs
     const values: Record<string, string | string[]> = {};
     for (const varName of templateVariables) {
-      const input = inputsMeta[varName];
+      const input = inputsWithMeta[varName];
       if (input) {
         // If input has items (list), use the full array
         if (input.items && input.items.length > 0) {
@@ -106,7 +104,7 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.value, templateVariables.join(","), incomingEdges, getInputsWithMeta]);
+  }, [data.value, templateVariables.join(","), incomingEdges, inputsWithMeta]);
 
   // Handle textarea change
   const handleChange = useCallback(

@@ -40,63 +40,42 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
   // Infer output type from connected node
   const inferredType = useMemo((): OutputNodeOutputType | null => {
     const incomingEdge = edges.find((e) => e.target === id);
-
-    console.log("[OutputNode] Checking edges for node:", id);
-    console.log("[OutputNode] Incoming edge:", incomingEdge);
-
     if (!incomingEdge) return null;
 
     const sourceNode = nodes.find((n) => n.id === incomingEdge.source);
-    console.log("[OutputNode] Source node:", sourceNode?.type, sourceNode?.id);
-
     if (!sourceNode) return null;
 
     const sourceType = sourceNode.type;
     const sourceData = sourceNode.data as Record<string, unknown>;
 
-    let result: OutputNodeOutputType | null = null;
-
     switch (sourceType) {
       case "fluxDev":
-        result = "image";
-        break;
+        return "image";
       case "veo3Fast":
-        result = "video";
-        break;
+        return "video";
       case "outputGallery": {
         const outputs = sourceData.outputs as OutputGalleryOutput[] | undefined;
         if (outputs && outputs.length > 0) {
-          result = outputs[0].type === "video" ? "video[]" : "image[]";
-        } else {
-          result = "image[]"; // Default for empty gallery
+          return outputs[0].type === "video" ? "video[]" : "image[]";
         }
-        break;
+        return "image[]"; // Default for empty gallery
       }
       case "image":
-        result = "image";
-        break;
+        return "image";
       case "video":
-        result = "video";
-        break;
+        return "video";
       case "text":
-        result = "string";
-        break;
+        return "string";
       case "list":
-        result = "string[]";
-        break;
+        return "string[]";
       default:
-        result = null;
+        return null;
     }
-
-    console.log("[OutputNode] Inferred type:", result);
-    return result;
   }, [id, edges, nodes]);
 
   // Auto-update output type when inferred type changes
   useEffect(() => {
-    console.log("[OutputNode] Auto-update check:", { inferredType, currentType: data.outputType });
     if (inferredType && inferredType !== data.outputType) {
-      console.log("[OutputNode] Updating type to:", inferredType);
       updateNodeData({ outputType: inferredType });
     }
   }, [inferredType, data.outputType, updateNodeData]);
