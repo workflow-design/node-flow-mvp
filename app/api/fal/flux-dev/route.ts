@@ -1,5 +1,5 @@
 import { fal } from "@/lib/fal";
-import { uploadToSupabase } from "@/lib/uploadToSupabase";
+import { uploadToSupabaseOrPassthrough } from "@/lib/uploadToSupabase";
 import { NextResponse } from "next/server";
 
 interface RequestBody {
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
     const falImageUrl = result.data.images[0].url;
     console.log("Flux API: downloading and uploading to Supabase...");
 
-    // Download from Fal.ai and upload to Supabase
-    const supabaseUrl = await uploadToSupabase(falImageUrl, "png");
+    // Download from Fal.ai and upload to Supabase (or passthrough if local)
+    const supabaseUrl = await uploadToSupabaseOrPassthrough(falImageUrl, "png");
     console.log("Flux API: uploaded to Supabase:", supabaseUrl);
 
     return NextResponse.json({ imageUrl: supabaseUrl });

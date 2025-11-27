@@ -1,7 +1,7 @@
 import type { AppNode } from "@/types/nodes";
 import type { NodeOutput, ExecutorResult, ExecutionContext, NodeExecutor } from "./types";
 import { fal } from "@/lib/fal";
-import { uploadToSupabase } from "@/lib/uploadToSupabase";
+import { uploadToSupabaseOrPassthrough } from "@/lib/uploadToSupabase";
 
 /**
  * Generator function type for video generation.
@@ -130,7 +130,7 @@ export const veo3FastGenerators = {
     }
 
     const falVideoUrl = result.data.video.url;
-    const supabaseUrl = await uploadToSupabase(falVideoUrl, "mp4");
+    const supabaseUrl = await uploadToSupabaseOrPassthrough(falVideoUrl, "mp4");
     return supabaseUrl;
   },
 

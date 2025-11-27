@@ -1,7 +1,7 @@
 import type { AppNode } from "@/types/nodes";
 import type { NodeOutput, ExecutorResult, ExecutionContext, NodeExecutor } from "./types";
 import { fal } from "@/lib/fal";
-import { uploadToSupabase } from "@/lib/uploadToSupabase";
+import { uploadToSupabaseOrPassthrough } from "@/lib/uploadToSupabase";
 
 /**
  * Generator function type for image generation.
@@ -115,7 +115,7 @@ export const fluxDevGenerators = {
     }
 
     const falImageUrl = result.data.images[0].url;
-    const supabaseUrl = await uploadToSupabase(falImageUrl, "png");
+    const supabaseUrl = await uploadToSupabaseOrPassthrough(falImageUrl, "png");
     return supabaseUrl;
   },
 

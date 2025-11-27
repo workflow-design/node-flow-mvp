@@ -1,5 +1,5 @@
 import { fal } from "@/lib/fal";
-import { uploadToSupabase } from "@/lib/uploadToSupabase";
+import { uploadToSupabaseOrPassthrough } from "@/lib/uploadToSupabase";
 import { NextResponse } from "next/server";
 
 interface RequestBody {
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
     const falVideoUrl = result.data.video.url;
     console.log("Veo3 API: downloading and uploading to Supabase...");
 
-    // Download from Fal.ai and upload to Supabase
-    const supabaseUrl = await uploadToSupabase(falVideoUrl, "mp4");
+    // Download from Fal.ai and upload to Supabase (or passthrough if local)
+    const supabaseUrl = await uploadToSupabaseOrPassthrough(falVideoUrl, "mp4");
     console.log("Veo3 API: uploaded to Supabase:", supabaseUrl);
 
     return NextResponse.json({ videoUrl: supabaseUrl });
