@@ -348,4 +348,56 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-27 — Headless Workflow Execution Engine with Shared Executors
+
+**Decision:** Extract node execution logic into pure functions that can run headlessly on the backend, using a generator injection pattern to share logic between frontend and backend.
+
+**Context:** Need to enable workflow execution via API without the React UI, while keeping the existing frontend working and avoiding code duplication.
+
+**Key Choices:**
+
+1. **Generator Injection Pattern:** Executor factory functions take a "generator" (API caller) as parameter
+   - Backend: Direct Fal.ai calls via `fal.subscribe()` (fast, single hop)
+   - Frontend: Via `/api/fal/*` routes (API key stays server-side)
+   - Consequence: Same batch/error handling logic shared, only API call differs
+
+2. **Single Source of Truth:** Both frontend and backend generators defined in same file
+   - Rationale: If developer adds one, they're forced to add the other
+   - Consequence: TypeScript errors if generator object is incomplete
+
+3. **Direct Fal Calls for Backend:** Headless executors call Fal.ai directly (not through API routes)
+   - Rationale: Faster execution, no HTTP overhead
+   - Consequence: Backend code can only run server-side (not in browser)
+
+4. **Topological Sort for Execution Order:** Kahn's algorithm for dependency ordering
+   - Rationale: Ensures upstream nodes execute before downstream
+   - Consequence: Cycles detected and warned about
+
+5. **Mock Workflow for Testing:** API route uses hardcoded test workflow initially
+   - Rationale: Supabase workflow table will be created separately
+   - Consequence: Only "test" workflow ID works until database integration
+
+**Files Created:**
+- `lib/workflow/executors/types.ts` — Type definitions
+- `lib/workflow/graphUtils.ts` — Graph traversal utilities
+- `lib/workflow/executors/textExecutor.ts` — Template interpolation
+- `lib/workflow/executors/listExecutor.ts` — List passthrough
+- `lib/workflow/executors/fluxDevExecutor.ts` — Image generation with factory
+- `lib/workflow/executors/veo3FastExecutor.ts` — Video generation with factory
+- `lib/workflow/executors/index.ts` — Executor registry
+- `lib/workflow/runner.ts` — Workflow orchestrator
+- `app/api/workflows/[id]/run/route.ts` — API endpoint
+
+**Files Modified:**
+- `components/nodes/FluxDevNode.tsx` — Uses shared frontend generator
+- `components/nodes/Veo3FastNode.tsx` — Uses shared frontend generator
+- `eslint.config.mjs` — Added underscore-prefix ignore pattern
+
+**Consequences:**
+- Workflows can run headlessly via `POST /api/workflows/[id]/run`
+- Adding new model nodes requires: executor file with both generators, registry entry
+- Frontend and backend share batch execution logic
+
+---
+
 <!-- Add new decisions above this line -->

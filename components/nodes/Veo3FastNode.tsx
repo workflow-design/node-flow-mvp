@@ -7,6 +7,7 @@ import type { Veo3FastNodeData } from "@/types/nodes";
 import { useNodeInputs } from "@/hooks/useNodeInputs";
 import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
+import { veo3FastGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [
   { id: "prompt", label: "prompt", required: true },
@@ -30,21 +31,11 @@ export function Veo3FastNode({ id, data }: NodeProps<Veo3FastNodeData>) {
     [id, setNodes]
   );
 
+  // Use shared generator, wrap to match useBatchExecution signature
   const generateVideo = useCallback(
     async (prompt: string, imageUrl?: string): Promise<{ url: string; type: "image" | "video" }> => {
-      const response = await fetch("/api/fal/veo3-fast", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, imageUrl: imageUrl || undefined }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to generate video");
-      }
-
-      return { url: result.videoUrl, type: "video" };
+      const url = await veo3FastGenerators.frontend(prompt, imageUrl);
+      return { url, type: "video" };
     },
     []
   );

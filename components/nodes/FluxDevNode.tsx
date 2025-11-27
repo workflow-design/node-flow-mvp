@@ -7,6 +7,7 @@ import type { FluxDevNodeData } from "@/types/nodes";
 import { useNodeInputs } from "@/hooks/useNodeInputs";
 import { useBatchExecution } from "@/hooks/useBatchExecution";
 import { ModelNodeShell } from "./ModelNodeShell";
+import { fluxDevGenerators } from "@/lib/workflow/executors";
 
 const INPUT_HANDLES = [{ id: "prompt", label: "prompt", required: true }];
 
@@ -27,21 +28,11 @@ export function FluxDevNode({ id, data }: NodeProps<FluxDevNodeData>) {
     [id, setNodes]
   );
 
+  // Use shared generator, wrap to match useBatchExecution signature
   const generateImage = useCallback(
     async (prompt: string): Promise<{ url: string; type: "image" | "video" }> => {
-      const response = await fetch("/api/fal/flux-dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to generate image");
-      }
-
-      return { url: result.imageUrl, type: "image" };
+      const url = await fluxDevGenerators.frontend(prompt);
+      return { url, type: "image" };
     },
     []
   );
