@@ -67,6 +67,7 @@ export async function runWorkflow(
       // Update state
       nodeStates[node.id] = {
         status: result.status,
+        input: resolvedInputs,
         output: result.output,
         error: result.error,
       };

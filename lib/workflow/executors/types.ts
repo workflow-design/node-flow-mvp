@@ -50,6 +50,7 @@ export interface NodeExecutor {
  */
 export interface NodeState {
   status: "pending" | "running" | "completed" | "failed";
+  input?: Record<string, NodeOutput>;
   output?: NodeOutput;
   error?: string;
 }
