@@ -10,17 +10,31 @@ export interface InputHandle {
   required?: boolean;
 }
 
+interface BatchProgress {
+  current: number;
+  total: number;
+}
+
 interface ModelNodeShellProps {
   title: string;
   inputs: InputHandle[];
   onRun: () => void;
+  onCancel?: () => void;
   status: ModelNodeStatus;
   error: string | null;
   disabled?: boolean;
+  listItemCount?: number;
+  batchProgress?: BatchProgress;
   children?: ReactNode;
 }
 
-function StatusIndicator({ status }: { status: ModelNodeStatus }) {
+function StatusIndicator({
+  status,
+  batchProgress,
+}: {
+  status: ModelNodeStatus;
+  batchProgress?: BatchProgress;
+}) {
   const statusConfig = {
     idle: { color: "bg-gray-400", label: "Idle" },
     running: { color: "bg-yellow-400 animate-pulse", label: "Running..." },
@@ -29,6 +43,25 @@ function StatusIndicator({ status }: { status: ModelNodeStatus }) {
   };
 
   const config = statusConfig[status];
+
+  // Show progress bar for batch execution
+  if (status === "running" && batchProgress) {
+    const percent = (batchProgress.current / batchProgress.total) * 100;
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className={`h-2 w-2 rounded-full ${config.color}`} />
+          {batchProgress.current}/{batchProgress.total}
+        </div>
+        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-300"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -42,13 +75,29 @@ export function ModelNodeShell({
   title,
   inputs,
   onRun,
+  onCancel,
   status,
   error,
   disabled = false,
+  listItemCount,
+  batchProgress,
   children,
 }: ModelNodeShellProps) {
   const isRunning = status === "running";
   const isDisabled = disabled || isRunning;
+  const isBatchMode = listItemCount !== undefined && listItemCount > 0;
+
+  const getButtonLabel = () => {
+    if (isRunning) {
+      return batchProgress
+        ? `Running ${batchProgress.current}/${batchProgress.total}...`
+        : "Running...";
+    }
+    if (isBatchMode) {
+      return `Run All (${listItemCount})`;
+    }
+    return "Run";
+  };
 
   return (
     <div className="w-64 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -83,14 +132,23 @@ export function ModelNodeShell({
 
       {/* Controls */}
       <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 dark:border-gray-700">
-        <button
-          onClick={onRun}
-          disabled={isDisabled}
-          className="rounded bg-blue-500 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600"
-        >
-          {isRunning ? "Running..." : "Run"}
-        </button>
-        <StatusIndicator status={status} />
+        {isRunning && onCancel ? (
+          <button
+            onClick={onCancel}
+            className="rounded bg-red-500 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-red-600"
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            onClick={onRun}
+            disabled={isDisabled}
+            className="rounded bg-blue-500 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600"
+          >
+            {getButtonLabel()}
+          </button>
+        )}
+        <StatusIndicator status={status} batchProgress={batchProgress} />
       </div>
 
       {/* Error message */}

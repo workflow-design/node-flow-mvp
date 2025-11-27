@@ -20,8 +20,10 @@ import "reactflow/dist/style.css";
 import { TextNode } from "./nodes/TextNode";
 import { ImageNode } from "./nodes/ImageNode";
 import { VideoNode } from "./nodes/VideoNode";
+import { ListNode } from "./nodes/ListNode";
 import { FluxDevNode } from "./nodes/FluxDevNode";
 import { Veo3FastNode } from "./nodes/Veo3FastNode";
+import { OutputGalleryNode } from "./nodes/OutputGalleryNode";
 import { storage } from "@/lib/storage/index";
 import { fileStorage } from "@/lib/fileUpload/index";
 import type {
@@ -29,8 +31,10 @@ import type {
   TextNodeData,
   ImageNodeData,
   VideoNodeData,
+  ListNodeData,
   FluxDevNodeData,
   Veo3FastNodeData,
+  OutputGalleryNodeData,
 } from "@/types/nodes";
 
 let nodeId = 0;
@@ -40,23 +44,33 @@ function getNodeId() {
 
 function getInitialDataForType(
   type: NodeType
-):
-  | TextNodeData
-  | ImageNodeData
-  | VideoNodeData
-  | FluxDevNodeData
-  | Veo3FastNodeData {
+): TextNodeData | ImageNodeData | VideoNodeData | ListNodeData | FluxDevNodeData | Veo3FastNodeData | OutputGalleryNodeData {
   switch (type) {
     case "text":
-      return { label: "Text", value: "" };
+      return {
+        label: "Text",
+        value: "",
+        resolvedValue: "",
+        resolvedItems: [],
+        templateVariables: [],
+      };
     case "image":
       return { label: "Image", value: "", fileId: null, source: null };
     case "video":
       return { label: "Video", value: "", fileId: null, source: null };
+    case "list":
+      return { label: "List", items: [] };
     case "fluxDev":
       return { label: "Flux Dev", status: "idle", output: null, error: null };
     case "veo3Fast":
       return { label: "Veo 3 Fast", status: "idle", output: null, error: null };
+    case "outputGallery":
+      return {
+        label: "Output Gallery",
+        outputs: [],
+        status: "idle",
+        progress: { current: 0, total: 0 },
+      };
   }
 }
 
@@ -75,8 +89,10 @@ export function Canvas() {
       text: TextNode,
       image: ImageNode,
       video: VideoNode,
+      list: ListNode,
       fluxDev: FluxDevNode,
       veo3Fast: Veo3FastNode,
+      outputGallery: OutputGalleryNode,
     }),
     []
   );

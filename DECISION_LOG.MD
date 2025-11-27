@@ -260,4 +260,92 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-26 — Phase 5: Batch Execution Architecture
+
+**Decision:** Implement batch processing with ListNode for inputs, OutputGalleryNode for outputs, sequential execution, and "Run All" button on model nodes.
+
+**Context:** Phase 5 adds batch processing to generate multiple outputs from a list of inputs.
+
+**Key Choices:**
+
+1. **Sequential Execution:** Run items one at a time instead of in parallel
+   - Rationale: Prevents Fal.ai rate limit issues
+   - Consequence: Slower but more reliable execution
+
+2. **Run All Button Location:** On the model node (Flux/Veo), not on ListNode or GalleryNode
+   - Rationale: Model node already has Run button; changing to "Run All (N items)" when list connected is intuitive
+   - Consequence: Model nodes need to detect list inputs
+
+3. **Max Items Limit:** 10 items maximum per list
+   - Rationale: Prevents runaway API costs during MVP
+   - Consequence: Users must batch larger sets manually
+
+4. **Video Thumbnails:** Extract first frame using canvas API
+   - Rationale: Better UX than placeholder icons
+   - Consequence: Small performance cost on batch completion
+
+5. **Cancel Button:** Replaces "Run All" during batch execution
+   - Rationale: Clear, direct cancellation UX
+   - Consequence: Keeps completed results when cancelled
+
+6. **Zip Library:** JSZip + file-saver for download all
+   - Rationale: Well-maintained, browser-native, no backend needed
+   - Consequence: Added ~100KB to bundle size
+
+**Files Added:**
+- `components/nodes/ListNode.tsx`
+- `components/nodes/OutputGalleryNode.tsx`
+- `hooks/useBatchExecution.ts`
+- `lib/downloadZip.ts`
+- `lib/videoThumbnail.ts`
+
+**Consequences:**
+- Sidebar now has three sections: Data, Models, Output
+- Model nodes detect list connections via enhanced useNodeInputs hook
+- Gallery node shows progress and allows download of all outputs
+
+---
+
+### 2025-11-26 — Phase 5b: Template Variables in TextNode
+
+**Decision:** Add template variable support to TextNode using `{variableName}` syntax with dynamic input handles.
+
+**Context:** Phase 5b enables TextNode to accept inputs from other nodes and use them as template variables, allowing template strings like "A close up shot of moisture on the {fruit}" to be resolved dynamically.
+
+**Key Choices:**
+
+1. **Template Syntax:** `{variableName}` with alphanumeric + underscore names
+   - Rationale: Familiar syntax (similar to Python f-strings, Mustache templates)
+   - Consequence: Regex pattern `/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g`
+
+2. **Dynamic Input Handles:** Input handles appear/disappear based on detected variables
+   - Rationale: Variables in template text automatically become connectable inputs
+   - Consequence: Handle IDs match variable names for edge targeting
+
+3. **Output Data Structure:** Store both `resolvedValue` (string) and `resolvedItems` (string[])
+   - Rationale: Mirrors ListNode pattern — downstream nodes check `items.length > 0` for batch mode
+   - Consequence: Model nodes don't need special handling for templated text nodes
+
+4. **Single List Input Limit:** Only one list input allowed per template
+   - Rationale: Multiple lists would require cartesian product (complex) or zip (confusing)
+   - Consequence: Error message shown if user connects multiple list nodes
+
+5. **Live Preview:** Show interpolated result or list variations below textarea
+   - Rationale: Immediate feedback improves UX
+   - Consequence: Slightly taller node when variables present
+
+**Files Modified:**
+- `lib/templateParser.ts` (new) — Pure parsing/interpolation functions
+- `types/nodes.ts` — Extended TextNodeData type
+- `hooks/useNodeInputs.ts` — Detect text nodes with resolvedItems
+- `components/nodes/TextNode.tsx` — Major rewrite with dynamic handles
+- `components/Canvas.tsx` — Updated initial data for text nodes
+
+**Consequences:**
+- TextNode can now receive inputs from TextNode, ListNode, or model node outputs
+- Templates enable dynamic prompt generation without duplicating text nodes
+- Batch execution works through templated TextNode (ListNode → TextNode → Model)
+
+---
+
 <!-- Add new decisions above this line -->
