@@ -17,6 +17,87 @@ const statusColors: Record<WorkflowRun["status"], string> = {
   cancelled: "bg-gray-500",
 };
 
+function isImageUrl(url: string): boolean {
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
+  const lowerUrl = url.toLowerCase();
+  return imageExtensions.some((ext) => lowerUrl.includes(ext));
+}
+
+function isVideoUrl(url: string): boolean {
+  const videoExtensions = [".mp4", ".webm", ".mov", ".avi"];
+  const lowerUrl = url.toLowerCase();
+  return videoExtensions.some((ext) => lowerUrl.includes(ext));
+}
+
+function OutputPreview({ name, url, runId }: { name: string; url: string; runId: string }) {
+  const isImage = isImageUrl(url);
+  const isVideo = isVideoUrl(url);
+  const filename = `${name}-${runId.slice(0, 8)}${isImage ? ".png" : isVideo ? ".mp4" : ""}`;
+
+  function handleDownload() {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.target = "_blank";
+    a.click();
+  }
+
+  if (isImage) {
+    return (
+      <div className="mb-2">
+        <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">{name}:</div>
+        <div className="relative group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={name}
+            className="w-full max-h-48 object-contain rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
+          />
+          <button
+            onClick={handleDownload}
+            className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Download
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <div className="mb-2">
+        <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">{name}:</div>
+        <div className="relative group">
+          <video
+            src={url}
+            controls
+            className="w-full max-h-48 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
+          />
+          <button
+            onClick={handleDownload}
+            className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Download
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Non-media URL - just show download link
+  return (
+    <div className="text-xs mb-1">
+      <button
+        onClick={handleDownload}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {name}: Download
+      </button>
+    </div>
+  );
+}
+
 export function RunsPanel({ workflowId, isOpen, onClose }: RunsPanelProps) {
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,14 +157,6 @@ export function RunsPanel({ workflowId, isOpen, onClose }: RunsPanelProps) {
     a.download = `run-${run.id.slice(0, 8)}-${run.status}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  function downloadArtifact(url: string, filename: string) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.target = "_blank";
-    a.click();
   }
 
   function formatTime(isoString: string) {
@@ -164,23 +237,18 @@ export function RunsPanel({ workflowId, isOpen, onClose }: RunsPanelProps) {
 
               {run.outputs && Object.keys(run.outputs).length > 0 && (
                 <div className="mb-2">
-                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">
                     Outputs:
                   </div>
                   {Object.entries(run.outputs).map(([key, value]) => (
-                    <div key={key} className="text-xs">
+                    <div key={key}>
                       {typeof value === "string" && value.startsWith("http") ? (
-                        <button
-                          onClick={() => downloadArtifact(value, `${key}-${run.id.slice(0, 8)}`)}
-                          className="text-blue-600 hover:underline dark:text-blue-400"
-                        >
-                          {key}: Download
-                        </button>
+                        <OutputPreview name={key} url={value} runId={run.id} />
                       ) : (
-                        <span className="text-neutral-600 dark:text-neutral-400">
+                        <div className="text-xs mb-1 text-neutral-600 dark:text-neutral-400">
                           {key}: {JSON.stringify(value).slice(0, 50)}
                           {JSON.stringify(value).length > 50 ? "..." : ""}
-                        </span>
+                        </div>
                       )}
                     </div>
                   ))}
