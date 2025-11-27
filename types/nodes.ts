@@ -63,7 +63,9 @@ export type Veo31KeyframeNodeData = BaseModelNodeData;
 export type Veo31FastNodeData = BaseModelNodeData;
 export type Veo31FastI2vNodeData = BaseModelNodeData;
 export type Veo31FastKeyframeNodeData = BaseModelNodeData;
-export type NanoBananaNodeData = BaseModelNodeData;
+export type NanoBananaNodeData = BaseModelNodeData & {
+  imageHandles: string[]; // Dynamic image handles: ["image_0", "image_1", ...]
+};
 export type KlingVideoNodeData = BaseModelNodeData;
 export type RecraftV3NodeData = BaseModelNodeData;
 

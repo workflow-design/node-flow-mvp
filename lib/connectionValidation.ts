@@ -197,6 +197,11 @@ export function getHandleAcceptedTypes(
     return ["text", "text[]"];
   }
 
+  // Nano Banana: dynamic image handles (image_0, image_1, etc.)
+  if (nodeType === "nanoBanana" && handleId.startsWith("image_")) {
+    return ["image", "image[]"];
+  }
+
   // Default: accept anything
   return ["text", "text[]", "image", "image[]", "video", "video[]"];
 }

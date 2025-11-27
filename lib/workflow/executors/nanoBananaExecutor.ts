@@ -5,9 +5,10 @@ import { uploadToSupabaseOrPassthrough } from "@/lib/uploadToSupabase";
 
 /**
  * Generator function type for image generation.
- * Takes a prompt, returns the URL of the generated image.
+ * Takes a prompt and optional image URLs for edit mode.
+ * Returns the URL of the generated image.
  */
-export type ImageGenerator = (prompt: string) => Promise<string>;
+export type ImageGenerator = (prompt: string, imageUrls?: string[]) => Promise<string>;
 
 /**
  * Creates a Nano Banana executor with the given image generator.
@@ -98,11 +99,16 @@ export function createNanoBananaExecutor(generateImage: ImageGenerator): NodeExe
 export const nanoBananaGenerators = {
   /**
    * Backend generator: Direct Fal API call (fast, server-side only)
+   * Uses nano-banana for text-to-image, nano-banana/edit for image editing
    */
-  backend: async (prompt: string): Promise<string> => {
-    const result = await fal.subscribe("fal-ai/nano-banana", {
-      input: { prompt },
-    });
+  backend: async (prompt: string, imageUrls?: string[]): Promise<string> => {
+    const isEditMode = imageUrls && imageUrls.length > 0;
+    const model = isEditMode ? "fal-ai/nano-banana/edit" : "fal-ai/nano-banana";
+    const input = isEditMode
+      ? { prompt, image_urls: imageUrls }
+      : { prompt };
+
+    const result = await fal.subscribe(model, { input });
 
     if (!result.data.images || result.data.images.length === 0) {
       throw new Error("No images generated");
@@ -115,12 +121,19 @@ export const nanoBananaGenerators = {
 
   /**
    * Frontend generator: Via API route (safe, works in browser)
+   * Routes to different endpoints based on whether images are provided
    */
-  frontend: async (prompt: string): Promise<string> => {
-    const response = await fetch("/api/fal/nano-banana", {
+  frontend: async (prompt: string, imageUrls?: string[]): Promise<string> => {
+    const isEditMode = imageUrls && imageUrls.length > 0;
+    const endpoint = isEditMode ? "/api/fal/nano-banana-edit" : "/api/fal/nano-banana";
+    const body = isEditMode
+      ? { prompt, image_urls: imageUrls }
+      : { prompt };
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify(body),
     });
 
     const result = await response.json();

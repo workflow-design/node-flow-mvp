@@ -82,7 +82,7 @@ function getInitialDataForType(type: NodeType): AppNodeData {
     case "veo31FastKeyframe":
       return { label: "Veo 3.1 Fast KF", status: "idle", output: null, error: null };
     case "nanoBanana":
-      return { label: "Nano Banana", status: "idle", output: null, error: null };
+      return { label: "Nano Banana", status: "idle", output: null, error: null, imageHandles: ["image_0"] };
     case "klingVideo":
       return { label: "Kling Video", status: "idle", output: null, error: null };
     case "recraftV3":
