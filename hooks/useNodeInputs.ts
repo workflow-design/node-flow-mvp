@@ -35,9 +35,14 @@ export function useNodeInputs(nodeId: string) {
 
       const handleId = edge.targetHandle ?? "default";
 
-      // Try to get value from data.value (data nodes) or data.output (model nodes)
+      // Try to get value from various node data fields
       const data = sourceNode.data as Record<string, unknown>;
-      if (typeof data.value === "string" && data.value) {
+      const sourceType = sourceNode.type as NodeType;
+
+      if (sourceType === "input" && typeof data.defaultValue === "string") {
+        // Input node uses defaultValue for manual execution
+        inputs[handleId] = data.defaultValue;
+      } else if (typeof data.value === "string" && data.value) {
         inputs[handleId] = data.value;
       } else if (typeof data.output === "string" && data.output) {
         inputs[handleId] = data.output;
@@ -65,8 +70,29 @@ export function useNodeInputs(nodeId: string) {
       const sourceType = sourceNode.type as NodeType;
       const data = sourceNode.data as Record<string, unknown>;
 
-      // Check for list node
-      if (sourceType === "list" && Array.isArray(data.items)) {
+      // Check for input node (uses defaultValue for manual UI execution)
+      if (sourceType === "input" && typeof data.defaultValue === "string") {
+        // Handle string[] type by splitting on newlines
+        if (data.inputType === "string[]") {
+          const items = (data.defaultValue as string)
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          inputs[handleId] = {
+            value: items.length > 0 ? items[0] : "",
+            sourceType,
+            sourceNodeId: sourceNode.id,
+            items,
+          };
+        } else {
+          inputs[handleId] = {
+            value: data.defaultValue as string,
+            sourceType,
+            sourceNodeId: sourceNode.id,
+          };
+        }
+      } else if (sourceType === "list" && Array.isArray(data.items)) {
+        // Check for list node
         inputs[handleId] = {
           value: data.items.length > 0 ? data.items[0] : "",
           sourceType,
