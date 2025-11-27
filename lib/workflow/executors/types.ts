@@ -21,6 +21,8 @@ export interface ExecutionContext {
   edges: Edge[];
   /** Map of nodeId -> output from already-executed nodes */
   nodeOutputs: Map<string, NodeOutput>;
+  /** External inputs passed to the workflow when run via API */
+  workflowInputs: Record<string, unknown>;
 }
 
 /**

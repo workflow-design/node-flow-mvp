@@ -1,5 +1,5 @@
 import type { Edge } from "reactflow";
-import type { NodeType, AppNode } from "@/types/nodes";
+import type { NodeType, AppNode, OutputNodeData } from "@/types/nodes";
 import type { NodeOutput, NodeState, WorkflowRunResult, ExecutionContext } from "./executors/types";
 import { topologicalSort, resolveNodeInputs, findTerminalNodes } from "./graphUtils";
 import { getExecutor } from "./executors";
@@ -9,11 +9,13 @@ import { getExecutor } from "./executors";
  *
  * @param nodes - The nodes in the workflow
  * @param edges - The edges connecting nodes
+ * @param workflowInputs - External inputs passed to Input nodes
  * @returns The result of the workflow execution
  */
 export async function runWorkflow(
   nodes: AppNode[],
-  edges: Edge[]
+  edges: Edge[],
+  workflowInputs: Record<string, unknown> = {}
 ): Promise<WorkflowRunResult> {
   // Initialize state tracking
   const nodeStates: Record<string, NodeState> = {};
@@ -32,6 +34,7 @@ export async function runWorkflow(
     nodes,
     edges,
     nodeOutputs,
+    workflowInputs,
   };
 
   // Execute nodes in order
@@ -81,11 +84,27 @@ export async function runWorkflow(
     }
   }
 
-  // Collect outputs from terminal nodes
-  const terminalNodes = findTerminalNodes(nodes, edges);
+  // Collect outputs from Output nodes (using their configured names)
+  // and from terminal nodes (for backwards compatibility with OutputGallery)
   const outputs: Record<string, NodeOutput> = {};
 
+  // First, collect from explicit Output nodes
+  for (const node of nodes) {
+    if (node.type === "output") {
+      const data = node.data as OutputNodeData;
+      const output = nodeOutputs.get(node.id);
+      if (output && data.name) {
+        outputs[data.name] = output;
+      }
+    }
+  }
+
+  // Also collect from terminal nodes for backwards compatibility
+  const terminalNodes = findTerminalNodes(nodes, edges);
   for (const node of terminalNodes) {
+    // Skip Output nodes (already collected with their names)
+    if (node.type === "output") continue;
+
     const output = nodeOutputs.get(node.id);
     if (output) {
       outputs[node.id] = output;

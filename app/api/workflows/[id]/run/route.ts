@@ -50,8 +50,8 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Execute workflow
-    const result = await runWorkflow(graph.nodes, graph.edges);
+    // Execute workflow with inputs
+    const result = await runWorkflow(graph.nodes, graph.edges, inputs);
 
     // Update run record
     await supabase

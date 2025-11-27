@@ -1,4 +1,4 @@
-import type { NodeType, AppNode, ImageNodeData, VideoNodeData, OutputGalleryNodeData } from "@/types/nodes";
+import type { NodeType, AppNode, ImageNodeData, VideoNodeData, OutputGalleryNodeData, InputNodeData } from "@/types/nodes";
 import type { NodeOutput, ExecutorResult, ExecutionContext, NodeExecutor, ExecutorRegistry } from "./types";
 import { textExecutor } from "./textExecutor";
 import { listExecutor } from "./listExecutor";
@@ -98,6 +98,99 @@ const outputGalleryExecutor: NodeExecutor = {
 };
 
 /**
+ * Executor for InputNode.
+ * Reads value from workflow inputs passed at runtime.
+ */
+const inputExecutor: NodeExecutor = {
+  async execute(
+    node: AppNode,
+    _resolvedInputs: Record<string, NodeOutput>,
+    context: ExecutionContext
+  ): Promise<ExecutorResult> {
+    const data = node.data as InputNodeData;
+    const inputName = data.name;
+
+    // Get value from workflow inputs
+    let value = context.workflowInputs[inputName];
+
+    // Fall back to default value if not provided
+    if (value === undefined && data.defaultValue) {
+      value = data.defaultValue;
+    }
+
+    // Validate required inputs
+    if (data.required && (value === undefined || value === "")) {
+      return {
+        output: { value: "", type: "text" },
+        status: "failed",
+        error: `Required input "${inputName}" is missing`,
+      };
+    }
+
+    // Handle string[] type - parse JSON or comma-separated
+    if (data.inputType === "string[]" && typeof value === "string") {
+      const stringValue = value;
+      try {
+        const parsed: unknown = JSON.parse(stringValue);
+        if (Array.isArray(parsed)) {
+          value = parsed;
+        }
+      } catch {
+        // Split by comma if not valid JSON
+        value = stringValue.split(",").map((s: string) => s.trim());
+      }
+    }
+
+    // Convert to items array if it's an array
+    const isArray = Array.isArray(value);
+    const items = isArray ? (value as string[]) : undefined;
+    const singleValue = isArray ? (value as string[])[0] ?? "" : String(value ?? "");
+
+    return {
+      output: {
+        value: singleValue,
+        items,
+        type: "text",
+      },
+      status: "completed",
+    };
+  },
+};
+
+/**
+ * Executor for OutputNode.
+ * Collects final output values from the workflow.
+ */
+const outputExecutor: NodeExecutor = {
+  async execute(
+    _node: AppNode,
+    resolvedInputs: Record<string, NodeOutput>,
+    _context: ExecutionContext
+  ): Promise<ExecutorResult> {
+    // Get the connected input value (check 'value' handle first, then 'default')
+    const input = resolvedInputs.value ?? resolvedInputs.default ?? Object.values(resolvedInputs)[0];
+
+    if (!input) {
+      return {
+        output: { value: "", type: "text" },
+        status: "completed",
+      };
+    }
+
+    // Pass through the connected value, preserving items and gallery outputs
+    return {
+      output: {
+        value: input.value,
+        items: input.items,
+        type: input.type,
+        galleryOutputs: input.galleryOutputs,
+      },
+      status: "completed",
+    };
+  },
+};
+
+/**
  * Registry of all node executors.
  */
 export const executorRegistry: ExecutorRegistry = {
@@ -108,6 +201,8 @@ export const executorRegistry: ExecutorRegistry = {
   image: imageExecutor,
   video: videoExecutor,
   outputGallery: outputGalleryExecutor,
+  input: inputExecutor,
+  output: outputExecutor,
 };
 
 /**

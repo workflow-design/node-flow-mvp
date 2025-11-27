@@ -24,17 +24,13 @@ import { ListNode } from "./nodes/ListNode";
 import { FluxDevNode } from "./nodes/FluxDevNode";
 import { Veo3FastNode } from "./nodes/Veo3FastNode";
 import { OutputGalleryNode } from "./nodes/OutputGalleryNode";
+import { InputNode } from "./nodes/InputNode";
+import { OutputNode } from "./nodes/OutputNode";
 import { storage } from "@/lib/storage/index";
 import { fileStorage } from "@/lib/fileUpload/index";
 import type {
   NodeType,
-  TextNodeData,
-  ImageNodeData,
-  VideoNodeData,
-  ListNodeData,
-  FluxDevNodeData,
-  Veo3FastNodeData,
-  OutputGalleryNodeData,
+  AppNodeData,
 } from "@/types/nodes";
 import type { WorkflowGraph } from "@/types/database";
 import type { WorkflowData } from "@/lib/storage";
@@ -44,9 +40,7 @@ function getNodeId() {
   return `node_${nodeId++}`;
 }
 
-function getInitialDataForType(
-  type: NodeType
-): TextNodeData | ImageNodeData | VideoNodeData | ListNodeData | FluxDevNodeData | Veo3FastNodeData | OutputGalleryNodeData {
+function getInitialDataForType(type: NodeType): AppNodeData {
   switch (type) {
     case "text":
       return {
@@ -72,6 +66,21 @@ function getInitialDataForType(
         outputs: [],
         status: "idle",
         progress: { current: 0, total: 0 },
+      };
+    case "input":
+      return {
+        label: "Input",
+        name: "",
+        inputType: "string",
+        defaultValue: "",
+        description: "",
+        required: true,
+      };
+    case "output":
+      return {
+        label: "Output",
+        name: "result",
+        outputType: "any",
       };
   }
 }
@@ -99,6 +108,8 @@ export function Canvas({ initialGraph }: CanvasProps = {}) {
       fluxDev: FluxDevNode,
       veo3Fast: Veo3FastNode,
       outputGallery: OutputGalleryNode,
+      input: InputNode,
+      output: OutputNode,
     }),
     []
   );

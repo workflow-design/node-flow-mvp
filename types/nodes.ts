@@ -7,7 +7,9 @@ export type NodeType =
   | "list"
   | "fluxDev"
   | "veo3Fast"
-  | "outputGallery";
+  | "outputGallery"
+  | "input"
+  | "output";
 
 export type TextNodeData = {
   label: string;
@@ -65,6 +67,32 @@ export type OutputGalleryNodeData = {
   progress: { current: number; total: number };
 };
 
+export type InputNodeInputType = "string" | "string[]" | "image" | "number";
+
+export type InputNodeData = {
+  label: string;
+  name: string; // The key in workflow inputs (e.g., "prompt")
+  inputType: InputNodeInputType;
+  defaultValue: string;
+  description: string;
+  required: boolean;
+};
+
+export type OutputNodeOutputType =
+  | "string"
+  | "string[]"
+  | "image"
+  | "image[]"
+  | "video"
+  | "video[]"
+  | "any";
+
+export type OutputNodeData = {
+  label: string;
+  name: string; // The key in workflow outputs (e.g., "images")
+  outputType: OutputNodeOutputType;
+};
+
 export type AppNodeData =
   | TextNodeData
   | ImageNodeData
@@ -72,7 +100,9 @@ export type AppNodeData =
   | ListNodeData
   | FluxDevNodeData
   | Veo3FastNodeData
-  | OutputGalleryNodeData;
+  | OutputGalleryNodeData
+  | InputNodeData
+  | OutputNodeData;
 
 export type TextNode = Node<TextNodeData>;
 export type ImageNode = Node<ImageNodeData>;
@@ -81,4 +111,6 @@ export type ListNode = Node<ListNodeData>;
 export type FluxDevNode = Node<FluxDevNodeData>;
 export type Veo3FastNode = Node<Veo3FastNodeData>;
 export type OutputGalleryNode = Node<OutputGalleryNodeData>;
+export type InputNode = Node<InputNodeData>;
+export type OutputNode = Node<OutputNodeData>;
 export type AppNode = Node<AppNodeData>;

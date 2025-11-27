@@ -400,4 +400,70 @@ A running log of technical decisions made during development.
 
 ---
 
+### 2025-11-27 — Input/Output Nodes for Workflow API Contract
+
+**Decision:** Add Input and Output node types that define a workflow's API contract, enabling explicit input parameters and named outputs.
+
+**Context:** When running workflows via API, users need a way to specify:
+1. What inputs the workflow accepts (name, type, required/optional, defaults)
+2. What outputs the workflow returns (named keys in the response)
+
+**Key Choices:**
+
+1. **Dedicated Node Types:** Separate Input and Output nodes (not reusing Text/OutputGallery)
+   - Rationale: Clear semantic distinction between "workflow interface" and "internal data"
+   - Consequence: Two new node types in the sidebar's new "Workflow" category
+
+2. **Input Node Configuration:** Name, type (string/string[]/image/number), default value, required flag
+   - Rationale: Matches common API parameter patterns
+   - Consequence: Schema extraction returns typed input definitions
+
+3. **Output Node Configuration:** Name and output type only (value comes from connection)
+   - Rationale: Output nodes collect results; type is for documentation/validation
+   - Consequence: Workflow response uses output names as keys
+
+4. **ExecutionContext Extension:** Added `workflowInputs` field to context
+   - Rationale: Input nodes need access to externally-provided values
+   - Consequence: `runWorkflow()` now accepts optional inputs parameter
+
+5. **Backwards Compatibility:** Terminal nodes (including OutputGallery) still collected in outputs
+   - Rationale: Existing workflows without Output nodes continue to work
+   - Consequence: Outputs record contains both named outputs and node IDs
+
+6. **Schema Extraction Utility:** `extractWorkflowSchema()` function for API documentation
+   - Rationale: Enables generating API docs or validation from workflow
+   - Consequence: New `/api/workflows/[id]/schema` endpoint
+
+**Files Created:**
+- `components/nodes/InputNode.tsx` — Green-themed input declaration node
+- `components/nodes/OutputNode.tsx` — Red-themed output collection node
+- `lib/workflow/schema.ts` — Schema extraction and validation utilities
+- `app/api/workflows/[id]/schema/route.ts` — Schema API endpoint
+
+**Files Modified:**
+- `types/nodes.ts` — Added InputNodeData, OutputNodeData types
+- `lib/workflow/executors/types.ts` — Added workflowInputs to ExecutionContext
+- `lib/workflow/executors/index.ts` — Added input/output executors
+- `lib/workflow/runner.ts` — Accept inputs param, collect named outputs
+- `components/Canvas.tsx` — Register new node types
+- `components/Sidebar.tsx` — New "Workflow" category at top
+
+**API Usage Example:**
+```bash
+# Get workflow schema
+GET /api/workflows/test/schema
+{ "inputs": [{ "name": "prompt", "type": "string", "required": true }], "outputs": [...] }
+
+# Run with inputs
+POST /api/workflows/test/run
+{ "inputs": { "prompt": "a cat wearing a hat" } }
+```
+
+**Consequences:**
+- Workflows can declare their API contract visually
+- API consumers can discover expected inputs/outputs
+- Type information available for validation (not enforced in MVP)
+
+---
+
 <!-- Add new decisions above this line -->

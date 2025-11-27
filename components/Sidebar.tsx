@@ -9,6 +9,45 @@ interface NodeTypeConfig {
   icon: React.ReactNode;
 }
 
+const workflowNodeTypes: NodeTypeConfig[] = [
+  {
+    type: "input",
+    label: "Input",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4 text-green-500"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  {
+    type: "output",
+    label: "Output",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4 text-red-500"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+];
+
 const dataNodeTypes: NodeTypeConfig[] = [
   {
     type: "text",
@@ -162,6 +201,11 @@ export function Sidebar() {
   return (
     <aside className="w-52 border-r border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        Workflow
+      </h2>
+      <NodeList nodes={workflowNodeTypes} />
+
+      <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
         Data
       </h2>
       <NodeList nodes={dataNodeTypes} />
