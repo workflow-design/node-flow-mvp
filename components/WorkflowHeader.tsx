@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RunsPanel } from "./RunsPanel";
+import { exportWorkflow, parseWorkflowImport } from "@/lib/workflow/exportImport";
 import type { Workflow } from "@/types/database";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -25,10 +27,13 @@ export function WorkflowHeader({
   onSave,
   onNameChange,
 }: WorkflowHeaderProps) {
+  const router = useRouter();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(workflow.name);
   const [showRuns, setShowRuns] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const status: SaveStatus = isSaving
     ? "saving"
@@ -65,6 +70,60 @@ export function WorkflowHeader({
 
   async function handleSave() {
     await onSave();
+  }
+
+  function handleDownload() {
+    exportWorkflow(workflow);
+    toast.success("Workflow downloaded");
+  }
+
+  async function handleImport(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const result = parseWorkflowImport(text);
+
+      if (!result.success) {
+        toast.error("Invalid workflow file", { description: result.error });
+        return;
+      }
+
+      const response = await fetch("/api/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: result.data.name,
+          description: result.data.description,
+          graph: result.data.graph,
+          default_inputs: result.data.default_inputs,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error("Failed to import workflow", {
+          description: error.error ?? "Unknown error",
+        });
+        return;
+      }
+
+      const newWorkflow = await response.json();
+      toast.success("Workflow imported");
+      router.push(`/workflows/${newWorkflow.id}`);
+    } catch (error) {
+      toast.error("Failed to import workflow", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsImporting(false);
+      // Reset file input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   }
 
   const lastSaved = new Date(workflow.updated_at);
@@ -138,6 +197,13 @@ export function WorkflowHeader({
           Copy Endpoint URL
         </button>
         <button
+          onClick={handleDownload}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          title="Download workflow as JSON file"
+        >
+          Download
+        </button>
+        <button
           onClick={() => setShowRuns(true)}
           className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
@@ -149,6 +215,22 @@ export function WorkflowHeader({
         >
           Debug
         </Link>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isImporting}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          title="Import workflow from JSON file"
+        >
+          {isImporting ? "Importing..." : "Import"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleImport}
+          className="hidden"
+          aria-label="Import workflow file"
+        />
         <Link
           href="/workflows/new"
           className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
