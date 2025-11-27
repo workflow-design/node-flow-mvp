@@ -35,6 +35,51 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
     [id, setNodes]
   );
 
+  // Infer output type from connected node
+  const inferredType = useMemo((): OutputNodeOutputType | null => {
+    const edges = getEdges();
+    const nodes = getNodes();
+    const incomingEdge = edges.find((e) => e.target === id);
+    if (!incomingEdge) return null;
+
+    const sourceNode = nodes.find((n) => n.id === incomingEdge.source);
+    if (!sourceNode) return null;
+
+    const sourceType = sourceNode.type;
+    const sourceData = sourceNode.data as Record<string, unknown>;
+
+    switch (sourceType) {
+      case "fluxDev":
+        return "image";
+      case "veo3Fast":
+        return "video";
+      case "outputGallery": {
+        const outputs = sourceData.outputs as OutputGalleryOutput[] | undefined;
+        if (outputs && outputs.length > 0) {
+          return outputs[0].type === "video" ? "video[]" : "image[]";
+        }
+        return "image[]"; // Default for empty gallery
+      }
+      case "image":
+        return "image";
+      case "video":
+        return "video";
+      case "text":
+        return "string";
+      case "list":
+        return "string[]";
+      default:
+        return null;
+    }
+  }, [id, getNodes, getEdges]);
+
+  // Auto-update output type when inferred type changes
+  useMemo(() => {
+    if (inferredType && inferredType !== data.outputType) {
+      updateNodeData({ outputType: inferredType });
+    }
+  }, [inferredType, data.outputType, updateNodeData]);
+
   // Get connected source node and determine preview type
   const preview = useMemo((): MediaPreview | null => {
     const edges = getEdges();
