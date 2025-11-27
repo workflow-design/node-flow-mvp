@@ -141,7 +141,7 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
   }, [id, edges, nodes]);
 
   return (
-    <div className="w-56 rounded-lg border-2 border-red-500 bg-white shadow-md dark:bg-gray-900">
+    <div className="w-64 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* Input Handle */}
       <AnyHandle handleType="target" position={Position.Left} id="value" />
 

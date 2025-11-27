@@ -110,12 +110,12 @@ export function ModelNodeShell({
       {/* Header */}
       <div className="border-b border-gray-200 px-3 py-2 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {title}
+          ✨ {title}
         </span>
       </div>
       <div className="flex grow">
         {/* Input handles */}
-        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+        <div className="w-full relative border-b border-r border-gray-200 px-3 py-2 dark:border-gray-700">
           <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
             Inputs
           </div>

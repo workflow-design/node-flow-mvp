@@ -138,7 +138,7 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
       {/* Inputs / Output table */}
       <div className="flex">
         {/* Input handles */}
-        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+        <div className="w-full relative border-b border-r border-gray-200 px-3 py-2 dark:border-gray-700">
           <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
             Inputs
           </div>
