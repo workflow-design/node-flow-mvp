@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useImperativeHandle, forwardRe
 import ReactFlow, {
   Background,
   Controls,
+  Panel,
   addEdge,
   useEdgesState,
   useNodesState,
@@ -13,7 +14,35 @@ import ReactFlow, {
   type NodeChange,
   type NodeTypes,
 } from "reactflow";
+import { HANDLE_LEGEND_COLORS, type HandleDataType } from "@/lib/constants/handleColors";
 import "reactflow/dist/style.css";
+
+const HANDLE_LABELS: Record<HandleDataType, string> = {
+  text: "Text",
+  image: "Image",
+  video: "Video",
+  any: "Any",
+};
+
+function HandleLegend() {
+  return (
+    <div className="rounded border border-gray-200 bg-white/90 px-2 py-1.5 text-xs shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/90">
+      <div className="mb-1 font-medium text-gray-500 dark:text-gray-400">Handles</div>
+      <div className="flex flex-col gap-1">
+        {(Object.keys(HANDLE_LEGEND_COLORS) as HandleDataType[]).map((type) => (
+          <div key={type} className="flex items-center gap-1.5">
+            <span
+              className={`h-2.5 w-2.5 rounded-full border-2 bg-white dark:bg-gray-900 ${HANDLE_LEGEND_COLORS[type]}`}
+            />
+            <span className="font-mono text-gray-600 dark:text-gray-400">
+              {HANDLE_LABELS[type]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 import { TextNode } from "./nodes/TextNode";
 import { ImageNode } from "./nodes/ImageNode";
@@ -293,6 +322,9 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
       >
         <Background gap={16} size={1} />
         <Controls />
+        <Panel position="bottom-right">
+          <HandleLegend />
+        </Panel>
       </ReactFlow>
     </div>
   );

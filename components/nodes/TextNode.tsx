@@ -135,31 +135,48 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
         </span>
       </div>
 
-      {/* Dynamic input handles section (only if variables detected) */}
-      {templateVariables.length > 0 && (
-        <div className="relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+      {/* Inputs / Output table */}
+      <div className="flex">
+        {/* Input handles */}
+        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
           <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
             Inputs
           </div>
-          {templateVariables.map((varName, index) => (
-            <div
-              key={varName}
-              className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400"
-            >
-              <TextHandle
-                handleType="target"
-                position={Position.Left}
-                id={varName}
-                className="!-left-[20px]"
-                style={{ top: `${12 + index * 0}px` }}
-              />
-              <span className="ml-1 font-mono text-gray-500 dark:text-gray-400">
-                {`{${varName}}`}
-              </span>
+          {templateVariables.length > 0 ? (
+            templateVariables.map((varName) => (
+              <div
+                key={varName}
+                className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400"
+              >
+                <TextHandle
+                  handleType="target"
+                  position={Position.Left}
+                  id={varName}
+                  className="!-left-[16px]"
+                />
+                <span className="ml-1 font-mono">
+                  {`{${varName}}`}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="py-1 text-xs text-gray-400 dark:text-gray-500">
+              —
             </div>
-          ))}
+          )}
         </div>
-      )}
+
+        {/* Output handle */}
+        <div className="w-full relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Output
+          </div>
+          <div className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400">
+            <TextHandle className="!-right-[16px]" />
+            <span className="ml-auto font-mono text-right">text</span>
+          </div>
+        </div>
+      </div>
 
       {/* Textarea */}
       <div className="p-3">
@@ -211,8 +228,6 @@ export function TextNode({ id, data }: NodeProps<TextNodeData>) {
         </div>
       )}
 
-      {/* Output handle */}
-      <TextHandle />
     </div>
   );
 }

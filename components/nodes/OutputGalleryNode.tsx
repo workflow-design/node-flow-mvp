@@ -72,7 +72,7 @@ export function OutputGalleryNode({ id, data }: NodeProps<OutputGalleryNodeData>
         {/* Input handle section */}
         <div className="relative border-b border-gray-200 px-3 py-2 dark:border-gray-700">
           <AnyHandle handleType="target" position={Position.Left} className="!-left-[16px]" />
-          <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">
+          <span className="ml-1 font-mono text-xs text-gray-600 dark:text-gray-400">
             input
           </span>
         </div>

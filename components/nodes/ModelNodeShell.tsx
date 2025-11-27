@@ -131,7 +131,7 @@ export function ModelNodeShell({
                 id={input.id}
                 className="-left-[16px]!"
               />
-              <span className="ml-1">
+              <span className="ml-1 font-mono">
                 {input.label}
                 {input.required && <span className="text-red-500">*</span>}
               </span>
@@ -144,13 +144,13 @@ export function ModelNodeShell({
           <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
             Output
           </div>
-          <div className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400">
+          <div className="relative flex items-center py-1 text-xs text-gray-600 dark:text-gray-400 text-right">
             {outputType === "video" ? (
               <VideoHandle className="!-right-[16px]"  />
             ) : (
               <ImageHandle className="!-right-[16px]"  />
             )}
-            <span className="ml-1">Result</span>
+            <span className="ml-auto font-mono text-right">{outputType === "video" ? "video" : "image"}</span>
           </div>
         </div>
       </div>
@@ -185,9 +185,6 @@ export function ModelNodeShell({
 
       {/* Output preview area */}
       {children && <div className="p-3">{children}</div>}
-
-      {/* Output handle */}
-      {outputType === "video" ? <VideoHandle /> : <ImageHandle />}
     </div>
   );
 }
