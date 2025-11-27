@@ -69,6 +69,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       runId: run.id,
       status: result.status,
       outputs: result.outputs,
+      nodeStates: result.nodeStates,
       error: result.error,
     });
   } catch (error) {

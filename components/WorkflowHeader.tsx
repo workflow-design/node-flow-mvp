@@ -144,6 +144,12 @@ export function WorkflowHeader({
           Runs
         </button>
         <Link
+          href={`/workflows/${workflow.id}/debug`}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        >
+          Debug
+        </Link>
+        <Link
           href="/workflows/new"
           className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
