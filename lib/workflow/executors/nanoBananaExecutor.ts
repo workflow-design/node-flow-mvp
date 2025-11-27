@@ -67,10 +67,11 @@ export function createNanoBananaExecutor(generateImage: ImageGenerator): NodeExe
       // Single execution
       try {
         // Collect image URLs from image_0, image_1, image_2, etc.
+        // Filter out empty strings (used as default values for optional inputs)
         const imageUrls: string[] = [];
         for (let i = 0; i < 10; i++) {
           const imageInput = resolvedInputs[`image_${i}`];
-          if (imageInput?.value) {
+          if (imageInput?.value && imageInput.value.trim() !== "") {
             imageUrls.push(imageInput.value);
           }
         }
