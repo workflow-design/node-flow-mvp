@@ -192,9 +192,18 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
 
   const onConnect = useCallback(
     (params: Connection) => {
-      setEdges((eds) => addEdge(params, eds));
+      setEdges((eds) => {
+        // For output nodes, only allow one input - replace existing connection
+        const targetNode = nodes.find((n) => n.id === params.target);
+        if (targetNode?.type === "output") {
+          // Remove any existing edges to this output node
+          const filteredEdges = eds.filter((e) => e.target !== params.target);
+          return addEdge(params, filteredEdges);
+        }
+        return addEdge(params, eds);
+      });
     },
-    [setEdges]
+    [setEdges, nodes]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {

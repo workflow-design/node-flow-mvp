@@ -47,7 +47,7 @@ div.react-flow__node selected  {
     box-shadow: none;
 
 }
-.react-flow__node.selectable:focus  {
+.react-flow__node  {
   border: none;
   box-shadow: none !important;
 }
