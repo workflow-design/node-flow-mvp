@@ -16,7 +16,8 @@ export default async function NewWorkflowPage() {
     .single();
 
   if (error || !workflow) {
-    throw new Error("Failed to create workflow");
+    console.error("Failed to create workflow:", error);
+    throw new Error(`Failed to create workflow: ${error?.message || "Unknown error"}`);
   }
 
   redirect(`/workflows/${workflow.id}`);

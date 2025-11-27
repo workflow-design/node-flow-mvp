@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { RunsPanel } from "./RunsPanel";
 import type { Workflow } from "@/types/database";
 
@@ -32,8 +33,8 @@ export function WorkflowHeader({
   const status: SaveStatus = isSaving
     ? "saving"
     : hasUnsavedChanges
-      ? "unsaved"
-      : "saved";
+    ? "unsaved"
+    : "saved";
 
   // Focus input when editing starts
   useEffect(() => {
@@ -115,12 +116,27 @@ export function WorkflowHeader({
             </span>
           )}
           {status === "saved" && !justSaved && (
-            <span className="text-neutral-400">Last saved {formattedTime}</span>
+            <span className="text-neutral-400" suppressHydrationWarning>
+              Last saved {formattedTime}
+            </span>
           )}
         </span>
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => {
+            const endpoint = `${window.location.origin}/api/workflows/${workflow.id}/run`;
+            navigator.clipboard.writeText(endpoint);
+            toast.success("Endpoint copied to clipboard", {
+              description: endpoint,
+            });
+          }}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          title="Copy workflow API endpoint URL to clipboard"
+        >
+          Copy Endpoint URL
+        </button>
         <button
           onClick={() => setShowRuns(true)}
           className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
