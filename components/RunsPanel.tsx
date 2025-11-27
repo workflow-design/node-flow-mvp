@@ -29,9 +29,10 @@ function isVideoUrl(url: string): boolean {
   return videoExtensions.some((ext) => lowerUrl.includes(ext));
 }
 
-function OutputPreview({ name, url, runId }: { name: string; url: string; runId: string }) {
-  const isImage = isImageUrl(url);
-  const isVideo = isVideoUrl(url);
+function OutputPreview({ name, url, runId, mediaType }: { name: string; url: string; runId: string; mediaType?: string }) {
+  // Use explicit type hint if provided, otherwise detect from URL
+  const isImage = mediaType === "image" || (!mediaType && isImageUrl(url));
+  const isVideo = mediaType === "video" || (!mediaType && isVideoUrl(url));
   const filename = `${name}-${runId.slice(0, 8)}${isImage ? ".png" : isVideo ? ".mp4" : ""}`;
 
   function handleDownload() {
@@ -240,18 +241,26 @@ export function RunsPanel({ workflowId, isOpen, onClose }: RunsPanelProps) {
                   <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">
                     Outputs:
                   </div>
-                  {Object.entries(run.outputs).map(([key, value]) => (
-                    <div key={key}>
-                      {typeof value === "string" && value.startsWith("http") ? (
-                        <OutputPreview name={key} url={value} runId={run.id} />
-                      ) : (
-                        <div className="text-xs mb-1 text-neutral-600 dark:text-neutral-400">
-                          {key}: {JSON.stringify(value).slice(0, 50)}
-                          {JSON.stringify(value).length > 50 ? "..." : ""}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {Object.entries(run.outputs).map(([key, value]) => {
+                    // Handle plain URL strings
+                    if (typeof value === "string" && value.startsWith("http")) {
+                      return <OutputPreview key={key} name={key} url={value} runId={run.id} />;
+                    }
+                    // Handle {type, value} objects from Output nodes
+                    if (value && typeof value === "object" && "value" in value) {
+                      const obj = value as { type?: string; value: unknown };
+                      if (typeof obj.value === "string" && obj.value.startsWith("http")) {
+                        return <OutputPreview key={key} name={key} url={obj.value} runId={run.id} mediaType={obj.type} />;
+                      }
+                    }
+                    // Fallback: show JSON
+                    return (
+                      <div key={key} className="text-xs mb-1 text-neutral-600 dark:text-neutral-400">
+                        {key}: {JSON.stringify(value).slice(0, 50)}
+                        {JSON.stringify(value).length > 50 ? "..." : ""}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
