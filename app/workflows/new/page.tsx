@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewWorkflowPage() {
   const { data: workflow, error } = await supabase
     .from("workflows")
