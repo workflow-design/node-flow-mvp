@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { RunsPanel } from "./RunsPanel";
 import type { Workflow } from "@/types/database";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -25,6 +26,7 @@ export function WorkflowHeader({
 }: WorkflowHeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(workflow.name);
+  const [showRuns, setShowRuns] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const status: SaveStatus = isSaving
@@ -119,6 +121,12 @@ export function WorkflowHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowRuns(true)}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        >
+          Runs
+        </button>
         <Link
           href="/workflows/new"
           className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -133,6 +141,12 @@ export function WorkflowHeader({
           {isSaving ? "Saving..." : "Save"}
         </button>
       </div>
+
+      <RunsPanel
+        workflowId={workflow.id}
+        isOpen={showRuns}
+        onClose={() => setShowRuns(false)}
+      />
     </header>
   );
 }
