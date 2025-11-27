@@ -4,6 +4,16 @@ import { textExecutor } from "./textExecutor";
 import { listExecutor } from "./listExecutor";
 import { fluxDevExecutor } from "./fluxDevExecutor";
 import { veo3FastExecutor } from "./veo3FastExecutor";
+import { veo31Executor } from "./veo31Executor";
+import { veo31I2vExecutor } from "./veo31I2vExecutor";
+import { veo31RefExecutor } from "./veo31RefExecutor";
+import { veo31KeyframeExecutor } from "./veo31KeyframeExecutor";
+import { veo31FastExecutor } from "./veo31FastExecutor";
+import { veo31FastI2vExecutor } from "./veo31FastI2vExecutor";
+import { veo31FastKeyframeExecutor } from "./veo31FastKeyframeExecutor";
+import { nanoBananaExecutor } from "./nanoBananaExecutor";
+import { klingVideoExecutor } from "./klingVideoExecutor";
+import { recraftV3Executor } from "./recraftV3Executor";
 
 /**
  * Passthrough executor for ImageNode.
@@ -198,6 +208,16 @@ export const executorRegistry: ExecutorRegistry = {
   list: listExecutor,
   fluxDev: fluxDevExecutor,
   veo3Fast: veo3FastExecutor,
+  veo31: veo31Executor,
+  veo31I2v: veo31I2vExecutor,
+  veo31Ref: veo31RefExecutor,
+  veo31Keyframe: veo31KeyframeExecutor,
+  veo31Fast: veo31FastExecutor,
+  veo31FastI2v: veo31FastI2vExecutor,
+  veo31FastKeyframe: veo31FastKeyframeExecutor,
+  nanoBanana: nanoBananaExecutor,
+  klingVideo: klingVideoExecutor,
+  recraftV3: recraftV3Executor,
   image: imageExecutor,
   video: videoExecutor,
   outputGallery: outputGalleryExecutor,
@@ -220,3 +240,13 @@ export { createFluxDevExecutor, fluxDevGenerators } from "./fluxDevExecutor";
 export type { ImageGenerator } from "./fluxDevExecutor";
 export { createVeo3FastExecutor, veo3FastGenerators } from "./veo3FastExecutor";
 export type { VideoGenerator } from "./veo3FastExecutor";
+export { createVeo31Executor, veo31Generators } from "./veo31Executor";
+export { createVeo31I2vExecutor, veo31I2vGenerators } from "./veo31I2vExecutor";
+export { createVeo31RefExecutor, veo31RefGenerators } from "./veo31RefExecutor";
+export { createVeo31KeyframeExecutor, veo31KeyframeGenerators } from "./veo31KeyframeExecutor";
+export { createVeo31FastExecutor, veo31FastGenerators } from "./veo31FastExecutor";
+export { createVeo31FastI2vExecutor, veo31FastI2vGenerators } from "./veo31FastI2vExecutor";
+export { createVeo31FastKeyframeExecutor, veo31FastKeyframeGenerators } from "./veo31FastKeyframeExecutor";
+export { createNanoBananaExecutor, nanoBananaGenerators } from "./nanoBananaExecutor";
+export { createKlingVideoExecutor, klingVideoGenerators } from "./klingVideoExecutor";
+export { createRecraftV3Executor, recraftV3Generators } from "./recraftV3Executor";

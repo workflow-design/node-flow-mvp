@@ -7,6 +7,16 @@ export type NodeType =
   | "list"
   | "fluxDev"
   | "veo3Fast"
+  | "veo31"
+  | "veo31I2v"
+  | "veo31Ref"
+  | "veo31Keyframe"
+  | "veo31Fast"
+  | "veo31FastI2v"
+  | "veo31FastKeyframe"
+  | "nanoBanana"
+  | "klingVideo"
+  | "recraftV3"
   | "outputGallery"
   | "input"
   | "output";
@@ -46,6 +56,16 @@ type BaseModelNodeData = {
 
 export type FluxDevNodeData = BaseModelNodeData;
 export type Veo3FastNodeData = BaseModelNodeData;
+export type Veo31NodeData = BaseModelNodeData;
+export type Veo31I2vNodeData = BaseModelNodeData;
+export type Veo31RefNodeData = BaseModelNodeData;
+export type Veo31KeyframeNodeData = BaseModelNodeData;
+export type Veo31FastNodeData = BaseModelNodeData;
+export type Veo31FastI2vNodeData = BaseModelNodeData;
+export type Veo31FastKeyframeNodeData = BaseModelNodeData;
+export type NanoBananaNodeData = BaseModelNodeData;
+export type KlingVideoNodeData = BaseModelNodeData;
+export type RecraftV3NodeData = BaseModelNodeData;
 
 export type ListNodeData = {
   label: string;
@@ -100,6 +120,16 @@ export type AppNodeData =
   | ListNodeData
   | FluxDevNodeData
   | Veo3FastNodeData
+  | Veo31NodeData
+  | Veo31I2vNodeData
+  | Veo31RefNodeData
+  | Veo31KeyframeNodeData
+  | Veo31FastNodeData
+  | Veo31FastI2vNodeData
+  | Veo31FastKeyframeNodeData
+  | NanoBananaNodeData
+  | KlingVideoNodeData
+  | RecraftV3NodeData
   | OutputGalleryNodeData
   | InputNodeData
   | OutputNodeData;
@@ -110,6 +140,16 @@ export type VideoNode = Node<VideoNodeData>;
 export type ListNode = Node<ListNodeData>;
 export type FluxDevNode = Node<FluxDevNodeData>;
 export type Veo3FastNode = Node<Veo3FastNodeData>;
+export type Veo31Node = Node<Veo31NodeData>;
+export type Veo31I2vNode = Node<Veo31I2vNodeData>;
+export type Veo31RefNode = Node<Veo31RefNodeData>;
+export type Veo31KeyframeNode = Node<Veo31KeyframeNodeData>;
+export type Veo31FastNode = Node<Veo31FastNodeData>;
+export type Veo31FastI2vNode = Node<Veo31FastI2vNodeData>;
+export type Veo31FastKeyframeNode = Node<Veo31FastKeyframeNodeData>;
+export type NanoBananaNode = Node<NanoBananaNodeData>;
+export type KlingVideoNode = Node<KlingVideoNodeData>;
+export type RecraftV3Node = Node<RecraftV3NodeData>;
 export type OutputGalleryNode = Node<OutputGalleryNodeData>;
 export type InputNode = Node<InputNodeData>;
 export type OutputNode = Node<OutputNodeData>;

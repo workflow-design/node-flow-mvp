@@ -21,10 +21,21 @@ import { VideoNode } from "./nodes/VideoNode";
 import { ListNode } from "./nodes/ListNode";
 import { FluxDevNode } from "./nodes/FluxDevNode";
 import { Veo3FastNode } from "./nodes/Veo3FastNode";
+import { Veo31Node } from "./nodes/Veo31Node";
+import { Veo31I2vNode } from "./nodes/Veo31I2vNode";
+import { Veo31RefNode } from "./nodes/Veo31RefNode";
+import { Veo31KeyframeNode } from "./nodes/Veo31KeyframeNode";
+import { Veo31FastNode } from "./nodes/Veo31FastNode";
+import { Veo31FastI2vNode } from "./nodes/Veo31FastI2vNode";
+import { Veo31FastKeyframeNode } from "./nodes/Veo31FastKeyframeNode";
+import { NanoBananaNode } from "./nodes/NanoBananaNode";
+import { KlingVideoNode } from "./nodes/KlingVideoNode";
+import { RecraftV3Node } from "./nodes/RecraftV3Node";
 import { OutputGalleryNode } from "./nodes/OutputGalleryNode";
 import { InputNode } from "./nodes/InputNode";
 import { OutputNode } from "./nodes/OutputNode";
 import { fileStorage } from "@/lib/fileUpload/index";
+import { isValidConnection } from "@/lib/connectionValidation";
 import type {
   NodeType,
   AppNodeData,
@@ -32,9 +43,8 @@ import type {
 import type { WorkflowGraph } from "@/types/database";
 import type { WorkflowData } from "@/lib/storage";
 
-let nodeId = 0;
 function getNodeId() {
-  return `node_${nodeId++}`;
+  return crypto.randomUUID();
 }
 
 function getInitialDataForType(type: NodeType): AppNodeData {
@@ -57,6 +67,26 @@ function getInitialDataForType(type: NodeType): AppNodeData {
       return { label: "Flux Dev", status: "idle", output: null, error: null };
     case "veo3Fast":
       return { label: "Veo 3 Fast", status: "idle", output: null, error: null };
+    case "veo31":
+      return { label: "Veo 3.1", status: "idle", output: null, error: null };
+    case "veo31I2v":
+      return { label: "Veo 3.1 I2V", status: "idle", output: null, error: null };
+    case "veo31Ref":
+      return { label: "Veo 3.1 Ref", status: "idle", output: null, error: null };
+    case "veo31Keyframe":
+      return { label: "Veo 3.1 Keyframe", status: "idle", output: null, error: null };
+    case "veo31Fast":
+      return { label: "Veo 3.1 Fast", status: "idle", output: null, error: null };
+    case "veo31FastI2v":
+      return { label: "Veo 3.1 Fast I2V", status: "idle", output: null, error: null };
+    case "veo31FastKeyframe":
+      return { label: "Veo 3.1 Fast KF", status: "idle", output: null, error: null };
+    case "nanoBanana":
+      return { label: "Nano Banana", status: "idle", output: null, error: null };
+    case "klingVideo":
+      return { label: "Kling Video", status: "idle", output: null, error: null };
+    case "recraftV3":
+      return { label: "Recraft V3", status: "idle", output: null, error: null };
     case "outputGallery":
       return {
         label: "Output Gallery",
@@ -111,6 +141,16 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
       list: ListNode,
       fluxDev: FluxDevNode,
       veo3Fast: Veo3FastNode,
+      veo31: Veo31Node,
+      veo31I2v: Veo31I2vNode,
+      veo31Ref: Veo31RefNode,
+      veo31Keyframe: Veo31KeyframeNode,
+      veo31Fast: Veo31FastNode,
+      veo31FastI2v: Veo31FastI2vNode,
+      veo31FastKeyframe: Veo31FastKeyframeNode,
+      nanoBanana: NanoBananaNode,
+      klingVideo: KlingVideoNode,
+      recraftV3: RecraftV3Node,
       outputGallery: OutputGalleryNode,
       input: InputNode,
       output: OutputNode,
@@ -139,15 +179,6 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
         setNodes(saved.nodes);
         setEdges(saved.edges);
         initialGraphRef.current = saved;
-        // Update nodeId to avoid collisions
-        const maxId = saved.nodes.reduce((max: number, node: Node) => {
-          const match = node.id.match(/^node_(\d+)$/);
-          if (match) {
-            return Math.max(max, parseInt(match[1], 10));
-          }
-          return max;
-        }, -1);
-        nodeId = maxId + 1;
       } else {
         initialGraphRef.current = { nodes: [], edges: [] };
       }
@@ -206,6 +237,11 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
     [setEdges, nodes]
   );
 
+  const validateConnection = useCallback(
+    (connection: Connection) => isValidConnection(connection, nodes),
+    [nodes]
+  );
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -249,6 +285,7 @@ export const Canvas = forwardRef<CanvasRef, CanvasProps>(function Canvas(
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={validateConnection}
         onDragOver={onDragOver}
         onDrop={onDrop}
         fitView

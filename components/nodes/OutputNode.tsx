@@ -50,8 +50,18 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
 
     switch (sourceType) {
       case "fluxDev":
+      case "nanoBanana":
+      case "recraftV3":
         return "image";
       case "veo3Fast":
+      case "veo31":
+      case "veo31I2v":
+      case "veo31Ref":
+      case "veo31Keyframe":
+      case "veo31Fast":
+      case "veo31FastI2v":
+      case "veo31FastKeyframe":
+      case "klingVideo":
         return "video";
       case "outputGallery": {
         const outputs = sourceData.outputs as OutputGalleryOutput[] | undefined;
@@ -99,10 +109,12 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
       }
     }
 
-    // FluxDev/Veo3Fast - single image/video output
-    if ((sourceType === "fluxDev" || sourceType === "veo3Fast") && sourceData.output) {
+    // Model nodes - single image/video output
+    const imageModelTypes = ["fluxDev", "nanoBanana", "recraftV3"];
+    const videoModelTypes = ["veo3Fast", "veo31", "veo31I2v", "veo31Ref", "veo31Keyframe", "veo31Fast", "veo31FastI2v", "veo31FastKeyframe", "klingVideo"];
+    if ((imageModelTypes.includes(sourceType ?? "") || videoModelTypes.includes(sourceType ?? "")) && sourceData.output) {
       const url = sourceData.output as string;
-      const isVideo = sourceType === "veo3Fast" || url.includes(".mp4") || url.includes(".webm");
+      const isVideo = videoModelTypes.includes(sourceType ?? "") || url.includes(".mp4") || url.includes(".webm");
       return { type: isVideo ? "video" : "image", value: url };
     }
 

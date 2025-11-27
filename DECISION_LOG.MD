@@ -466,4 +466,101 @@ POST /api/workflows/test/run
 
 ---
 
+### 2025-11-27 — Additional Fal.ai Model Nodes
+
+**Decision:** Add four new model nodes: Nano Banana (image), Kling Video (video), Recraft V3 (image), and Veo 3.1 (video).
+
+**Context:** Expanding model options beyond Flux Dev and Veo 3 Fast to give users more creative choices.
+
+**Models Added:**
+
+1. **Nano Banana** (`fal-ai/nano-banana`)
+   - Google's state-of-the-art image generation model
+   - Good for realistic image generation
+   - ~$0.039 per image
+
+2. **Kling Video** (`fal-ai/kling-video/v2.5-turbo/pro/text-to-video`)
+   - Top-tier video generation with cinematic visuals
+   - 5-second videos at $0.35 each
+   - Motion fluidity and prompt precision
+
+3. **Recraft V3** (`fal-ai/recraft/v3/text-to-image`)
+   - Specialized for vector art, typography, and branded styles
+   - Style options: realistic_image, digital_illustration, vector_illustration
+   - ~$0.04 per image
+
+4. **Veo 3.1** (`fal-ai/veo3.1`)
+   - Google's latest video generation with audio support
+   - 8-second videos at 720p with generated audio
+   - $0.40/second with audio, $0.20/second without
+
+**Architecture:**
+- Follows existing pattern: Node component + Executor + API route
+- Shared ModelNodeShell for UI consistency
+- Both frontend (API route) and backend (direct Fal) generators defined
+
+**Files Created:**
+- `components/nodes/NanoBananaNode.tsx`
+- `components/nodes/KlingVideoNode.tsx`
+- `components/nodes/RecraftV3Node.tsx`
+- `components/nodes/Veo31Node.tsx`
+- `lib/workflow/executors/nanoBananaExecutor.ts`
+- `lib/workflow/executors/klingVideoExecutor.ts`
+- `lib/workflow/executors/recraftV3Executor.ts`
+- `lib/workflow/executors/veo31Executor.ts`
+- `app/api/fal/nano-banana/route.ts`
+- `app/api/fal/kling-video/route.ts`
+- `app/api/fal/recraft-v3/route.ts`
+- `app/api/fal/veo31/route.ts`
+
+**Files Modified:**
+- `types/nodes.ts` — Added new node data types
+- `components/Canvas.tsx` — Registered new node types
+- `components/Sidebar.tsx` — Added to Models section
+- `lib/workflow/graphUtils.ts` — Added output handling
+- `lib/workflow/executors/index.ts` — Registered executors
+- `components/nodes/OutputNode.tsx` — Support preview for new types
+
+**Consequences:**
+- Users have 6 model options: Flux Dev, Nano Banana, Recraft V3 (images), Veo 3 Fast, Veo 3.1, Kling Video (videos)
+- All models support batch execution with ListNode
+- Adding more models follows same pattern
+
+---
+
+### 2025-11-27 — Connection Type Validation
+
+**Decision:** Implement type-checking for node connections to prevent invalid connections between incompatible node types.
+
+**Context:** Users could connect any output to any input, leading to runtime errors (e.g., connecting a video output to a prompt-only input).
+
+**Key Choices:**
+
+1. **Type System:** Seven data types covering all node outputs
+   - `text`, `text[]`, `image`, `image[]`, `video`, `video[]`, `any`
+   - Rationale: Minimal set covering all current node I/O patterns
+
+2. **Single → Array Coercion:** Allowed (e.g., `image` can connect to `image[]` input)
+   - Rationale: More flexible for users; prevents unnecessary List nodes for single items
+
+3. **No Visual Feedback:** Invalid connections simply don't form
+   - Rationale: Simpler implementation; React Flow's default "snap back" behavior is clear enough
+
+4. **Handle Specs Registry:** Centralized definition of what each handle accepts
+   - Rationale: Single source of truth for validation rules
+   - Consequence: Adding new model nodes requires updating the registry
+
+**Files Created:**
+- `lib/connectionValidation.ts` — Type system and validation logic
+
+**Files Modified:**
+- `components/Canvas.tsx` — Added `isValidConnection` prop to ReactFlow
+
+**Consequences:**
+- Users cannot create semantically invalid connections
+- Validation runs on every connection attempt (minimal performance impact)
+- New models must declare their handle types in the specs registry
+
+---
+
 <!-- Add new decisions above this line -->

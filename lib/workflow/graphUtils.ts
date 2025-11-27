@@ -61,7 +61,9 @@ export function getNodeOutput(node: AppNode): NodeOutput | null {
       return null;
     }
 
-    case "fluxDev": {
+    case "fluxDev":
+    case "nanoBanana":
+    case "recraftV3": {
       if (typeof data.output === "string" && data.output) {
         return {
           value: data.output,
@@ -71,7 +73,15 @@ export function getNodeOutput(node: AppNode): NodeOutput | null {
       return null;
     }
 
-    case "veo3Fast": {
+    case "veo3Fast":
+    case "veo31":
+    case "veo31I2v":
+    case "veo31Ref":
+    case "veo31Keyframe":
+    case "veo31Fast":
+    case "veo31FastI2v":
+    case "veo31FastKeyframe":
+    case "klingVideo": {
       if (typeof data.output === "string" && data.output) {
         return {
           value: data.output,
