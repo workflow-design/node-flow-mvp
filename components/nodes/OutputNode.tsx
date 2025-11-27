@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { Handle, Position, useReactFlow } from "reactflow";
 import type { NodeProps } from "reactflow";
 import type { OutputNodeData, OutputNodeOutputType, OutputGalleryOutput } from "@/types/nodes";
@@ -40,42 +40,63 @@ export function OutputNode({ id, data }: NodeProps<OutputNodeData>) {
     const edges = getEdges();
     const nodes = getNodes();
     const incomingEdge = edges.find((e) => e.target === id);
+
+    console.log("[OutputNode] Checking edges for node:", id);
+    console.log("[OutputNode] Incoming edge:", incomingEdge);
+
     if (!incomingEdge) return null;
 
     const sourceNode = nodes.find((n) => n.id === incomingEdge.source);
+    console.log("[OutputNode] Source node:", sourceNode?.type, sourceNode?.id);
+
     if (!sourceNode) return null;
 
     const sourceType = sourceNode.type;
     const sourceData = sourceNode.data as Record<string, unknown>;
 
+    let result: OutputNodeOutputType | null = null;
+
     switch (sourceType) {
       case "fluxDev":
-        return "image";
+        result = "image";
+        break;
       case "veo3Fast":
-        return "video";
+        result = "video";
+        break;
       case "outputGallery": {
         const outputs = sourceData.outputs as OutputGalleryOutput[] | undefined;
         if (outputs && outputs.length > 0) {
-          return outputs[0].type === "video" ? "video[]" : "image[]";
+          result = outputs[0].type === "video" ? "video[]" : "image[]";
+        } else {
+          result = "image[]"; // Default for empty gallery
         }
-        return "image[]"; // Default for empty gallery
+        break;
       }
       case "image":
-        return "image";
+        result = "image";
+        break;
       case "video":
-        return "video";
+        result = "video";
+        break;
       case "text":
-        return "string";
+        result = "string";
+        break;
       case "list":
-        return "string[]";
+        result = "string[]";
+        break;
       default:
-        return null;
+        result = null;
     }
+
+    console.log("[OutputNode] Inferred type:", result);
+    return result;
   }, [id, getNodes, getEdges]);
 
   // Auto-update output type when inferred type changes
-  useMemo(() => {
+  useEffect(() => {
+    console.log("[OutputNode] Auto-update check:", { inferredType, currentType: data.outputType });
     if (inferredType && inferredType !== data.outputType) {
+      console.log("[OutputNode] Updating type to:", inferredType);
       updateNodeData({ outputType: inferredType });
     }
   }, [inferredType, data.outputType, updateNodeData]);
