@@ -1,1 +1,5 @@
-export { localStorageAdapter as storage } from "./localStorage";
+export {
+  supabaseWorkflowStorage as storage,
+  setCurrentWorkflowId,
+  getCurrentWorkflowId,
+} from "./supabaseWorkflowStorage";

@@ -1,113 +1,83 @@
 import { NextResponse } from "next/server";
-import type { Edge } from "reactflow";
-import type { AppNode, ListNodeData, TextNodeData, FluxDevNodeData, OutputGalleryNodeData } from "@/types/nodes";
+import { supabase } from "@/lib/supabase";
 import { runWorkflow } from "@/lib/workflow/runner";
+import type { Workflow, WorkflowGraph } from "@/types/database";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-/**
- * Mock workflow for testing:
- * ListNode → TextNode → FluxDevNode → OutputGalleryNode
- */
-function getMockWorkflow(): { nodes: AppNode[]; edges: Edge[] } {
-  const nodes: AppNode[] = [
-    {
-      id: "list-1",
-      type: "list",
-      position: { x: 0, y: 0 },
-      data: {
-        label: "Subjects",
-        items: ["a cat", "a dog"],
-      } satisfies ListNodeData,
-    },
-    {
-      id: "text-1",
-      type: "text",
-      position: { x: 200, y: 0 },
-      data: {
-        label: "Prompt Template",
-        value: "A photorealistic image of {subject} sitting on a beach at sunset",
-        resolvedValue: "",
-        resolvedItems: [],
-        templateVariables: ["subject"],
-      } satisfies TextNodeData,
-    },
-    {
-      id: "flux-1",
-      type: "fluxDev",
-      position: { x: 400, y: 0 },
-      data: {
-        label: "Flux Dev",
-        status: "idle",
-        output: null,
-        error: null,
-      } satisfies FluxDevNodeData,
-    },
-    {
-      id: "gallery-1",
-      type: "outputGallery",
-      position: { x: 600, y: 0 },
-      data: {
-        label: "Output Gallery",
-        outputs: [],
-        status: "idle",
-        progress: { current: 0, total: 0 },
-      } satisfies OutputGalleryNodeData,
-    },
-  ];
-
-  const edges: Edge[] = [
-    {
-      id: "e1",
-      source: "list-1",
-      target: "text-1",
-      targetHandle: "subject",
-    },
-    {
-      id: "e2",
-      source: "text-1",
-      target: "flux-1",
-      targetHandle: "prompt",
-    },
-    {
-      id: "e3",
-      source: "flux-1",
-      target: "gallery-1",
-      targetHandle: "default",
-    },
-  ];
-
-  return { nodes, edges };
-}
-
 export async function POST(request: Request, { params }: RouteParams) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    // For now, only support the "test" workflow
-    if (id !== "test") {
+  try {
+    const body = await request.json().catch(() => ({}));
+
+    // Fetch workflow from database
+    const { data: workflow, error: fetchError } = await supabase
+      .from("workflows")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !workflow) {
       return NextResponse.json(
-        { error: `Workflow not found: ${id}` },
+        { error: "Workflow not found" },
         { status: 404 }
       );
     }
 
-    console.log(`Running workflow: ${id}`);
+    const typedWorkflow = workflow as Workflow;
+    const graph = typedWorkflow.graph as WorkflowGraph;
+    const inputs = { ...typedWorkflow.default_inputs, ...body.inputs };
 
-    // Get mock workflow
-    const { nodes, edges } = getMockWorkflow();
+    // Create run record
+    const { data: run, error: runError } = await supabase
+      .from("workflow_runs")
+      .insert({
+        workflow_id: id,
+        status: "running",
+        triggered_by: "api",
+        inputs,
+      })
+      .select()
+      .single();
 
-    // Run the workflow
-    const result = await runWorkflow(nodes, edges);
+    if (runError) {
+      return NextResponse.json(
+        { error: "Failed to create run" },
+        { status: 500 }
+      );
+    }
 
-    console.log(`Workflow ${id} completed with status: ${result.status}`);
+    // Execute workflow
+    const result = await runWorkflow(graph.nodes, graph.edges);
 
-    return NextResponse.json(result);
+    // Update run record
+    await supabase
+      .from("workflow_runs")
+      .update({
+        status: result.status,
+        node_states: result.nodeStates,
+        outputs: result.outputs,
+        error: result.error,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", run.id);
+
+    return NextResponse.json({
+      runId: run.id,
+      status: result.status,
+      outputs: result.outputs,
+      error: result.error,
+    });
   } catch (error) {
     console.error("Workflow execution error:", error);
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Execution failed",
+      },
+      { status: 500 }
+    );
   }
 }

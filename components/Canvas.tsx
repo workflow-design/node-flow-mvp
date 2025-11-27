@@ -36,6 +36,8 @@ import type {
   Veo3FastNodeData,
   OutputGalleryNodeData,
 } from "@/types/nodes";
+import type { WorkflowGraph } from "@/types/database";
+import type { WorkflowData } from "@/lib/storage";
 
 let nodeId = 0;
 function getNodeId() {
@@ -76,7 +78,11 @@ function getInitialDataForType(
 
 const SAVE_DEBOUNCE_MS = 500;
 
-export function Canvas() {
+interface CanvasProps {
+  initialGraph?: WorkflowGraph;
+}
+
+export function Canvas({ initialGraph }: CanvasProps = {}) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -100,7 +106,14 @@ export function Canvas() {
   // Load workflow from storage on mount
   useEffect(() => {
     async function loadWorkflow() {
-      const saved = await storage.load();
+      let saved: WorkflowData | null = null;
+
+      if (initialGraph) {
+        saved = { nodes: initialGraph.nodes, edges: initialGraph.edges };
+      } else {
+        saved = await storage.load();
+      }
+
       if (saved) {
         // Supabase URLs are persistent, no restoration needed
         setNodes(saved.nodes);
@@ -118,7 +131,7 @@ export function Canvas() {
       isLoadedRef.current = true;
     }
     loadWorkflow();
-  }, [setNodes, setEdges]);
+  }, [initialGraph, setNodes, setEdges]);
 
   // Debounced save to storage
   const saveWorkflow = useCallback(
