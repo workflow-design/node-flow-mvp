@@ -40,25 +40,19 @@ export async function POST(request: Request) {
     );
     transactionId = txId;
 
-    console.log("Flux API: calling fal-ai/flux/dev with prompt:", body.prompt.slice(0, 100));
-
     // 4. Call Fal.ai (credits already deducted)
     const result = await fal.subscribe("fal-ai/flux/dev", {
       input: { prompt: body.prompt },
     });
-
-    console.log("Flux API: received result with", result.data.images?.length ?? 0, "images");
 
     if (!result.data.images || result.data.images.length === 0) {
       throw new Error("No images generated");
     }
 
     const falImageUrl = result.data.images[0].url;
-    console.log("Flux API: downloading and uploading to Supabase...");
 
     // 5. Upload result
     const supabaseUrl = await uploadToSupabaseOrPassthrough(falImageUrl, "png");
-    console.log("Flux API: uploaded to Supabase:", supabaseUrl);
 
     return NextResponse.json({ imageUrl: supabaseUrl, cost });
   } catch (error) {

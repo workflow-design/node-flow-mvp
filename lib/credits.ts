@@ -18,10 +18,7 @@ export class InsufficientCreditsError extends Error {
  * Fetches the current price for a model from Fal.ai's pricing API
  */
 async function fetchModelPrice(endpointId: string): Promise<number> {
-  console.log(`[Credits] Fetching price for ${endpointId}`);
-
   const url = `${FAL_PRICING_API}?endpoint_id=${encodeURIComponent(endpointId)}`;
-  console.log(`[Credits] Request URL: ${url}`);
 
   const response = await fetch(url, {
     headers: {
@@ -29,27 +26,21 @@ async function fetchModelPrice(endpointId: string): Promise<number> {
     },
   });
 
-  console.log(`[Credits] Response status: ${response.status}`);
-
   if (!response.ok) {
     const text = await response.text();
-    console.error(`[Credits] Error response: ${text.substring(0, 500)}`);
     throw new Error(`Failed to fetch pricing: ${response.statusText} - ${text.substring(0, 200)}`);
   }
 
   const text = await response.text();
-  console.log(`[Credits] Response body: ${text.substring(0, 500)}`);
 
   let data;
   try {
     data = JSON.parse(text);
   } catch (e) {
-    console.error(`[Credits] Failed to parse JSON. Response was: ${text}`);
     throw new Error(`Invalid JSON response from pricing API: ${text.substring(0, 200)}`);
   }
 
   if (!data.prices || data.prices.length === 0) {
-    console.error(`[Credits] No prices found in response:`, data);
     throw new Error(`No pricing found for endpoint: ${endpointId}`);
   }
 
@@ -92,7 +83,6 @@ export async function checkAndDeductCredits(
 
   // 4. Deduct credits
   const newBalance = creditsData.balance - cost;
-  console.log(`[Credits] Deducting ${cost.toFixed(2)} from balance. New balance: ${newBalance.toFixed(2)}`);
 
   const { error: updateError } = await supabase
     .from("user_credits")
@@ -104,14 +94,10 @@ export async function checkAndDeductCredits(
     .eq("user_id", userId);
 
   if (updateError) {
-    console.error("[Credits] Update error:", updateError);
     throw new Error(`Failed to deduct credits: ${updateError.message} (${updateError.code})`);
   }
 
-  console.log(`[Credits] Credits deducted successfully`);
-
   // 5. Record transaction
-  console.log(`[Credits] Recording transaction for user ${userId}`);
   const { data: transaction, error: txError } = await supabase
     .from("credit_transactions")
     .insert({
@@ -125,18 +111,12 @@ export async function checkAndDeductCredits(
     .single();
 
   if (txError) {
-    console.error("[Credits] Transaction insert error:", txError);
     throw new Error(`Failed to record transaction: ${txError.message} (${txError.code})`);
   }
 
   if (!transaction) {
-    console.error("[Credits] No transaction returned from insert");
     throw new Error("Failed to record transaction: No data returned");
   }
-
-  console.log(
-    `Credits deducted for ${endpointId}: $${cost.toFixed(2)} (balance: $${newBalance.toFixed(2)})`
-  );
 
   return { transactionId: transaction.id, cost };
 }
