@@ -1,6 +1,6 @@
 # Node Flow MVP
 
-A workflow canvas tool built with Next.js and React Flow that allows users to create AI-powered creative workflows using Fal.ai.
+Workflow canvas tool for AI-powered creative workflows. Built with Next.js, React Flow, and Fal.ai.
 
 ## Tech Stack
 
@@ -8,106 +8,105 @@ A workflow canvas tool built with Next.js and React Flow that allows users to cr
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
 - **Canvas:** React Flow
-- **AI Backend:** Fal.ai
-- **Storage:** Supabase (media files)
-- **Deployment:** Vercel
+- **AI:** Fal.ai (image/video generation)
+- **Database:** Supabase (PostgreSQL, auth, storage)
+- **Deployment:** Vercel (auto-deploy on push to `main`)
 
-## Prerequisites
-
-- Node.js 20+
-- npm
-- A [Fal.ai](https://fal.ai) account (for AI model access)
-- Either:
-  - [Supabase CLI](https://supabase.com/docs/guides/cli) for local development, OR
-  - A [Supabase](https://supabase.com) cloud project
-
-## Setup
-
-### 1. Clone and Install
+## Quick Start
 
 ```bash
 git clone <repo-url>
 cd node-flow-mvp
 npm install
+cp .env.local.example .env.local  # Fill in FAL_KEY
 ```
 
-### 2. Environment Variables
+**Get API keys:**
+- `FAL_KEY`: [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys) (sign in with Google using accounts@workflow.design)
+- `STRIPE_SECRET_KEY` + price IDs: [dashboard.stripe.com](https://dashboard.stripe.com) (ask Will or Saul for access to accounts@workflow.design)
+- Supabase keys output from `supabase start` (local) or [supabase.com/dashboard](https://supabase.com/dashboard) (cloud)
 
-Copy the example env file:
-
+**Start dev environment:**
 ```bash
-cp .env.example .env
+supabase start          # Terminal 1: Database + storage
+npm run dev             # Terminal 2: Next.js (localhost:3000)
 ```
 
-Edit `.env` with your credentials:
+**First time setup:**
+```bash
+brew install supabase/tap/supabase  # Install Supabase CLI (macOS)
+supabase link --project-ref local   # Link to local instance
+supabase db push                     # Apply migrations
+```
+
+## Environment Variables
+
+Required in `.env.local`:
 
 ```env
-# Fal.ai API Key (required)
-# Get from: https://fal.ai/dashboard/keys
 FAL_KEY=your_fal_api_key
 
-# Supabase (required for media storage)
-# Option A: Local Supabase (see step 3a)
+# Local development (from `supabase start` output)
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 
-# Option B: Cloud Supabase (see step 3b)
+# Production (from Supabase dashboard)
 # NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 # NEXT_PUBLIC_SUPABASE_ANON_KEY=your_cloud_anon_key
+# SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Stripe (optional, for payments)
+# STRIPE_SECRET_KEY=sk_test_...
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+# STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-### 3a. Supabase Setup (Local)
-
-Install Supabase CLI:
-
-```bash
-# macOS
-brew install supabase/tap/supabase
-
-# Windows/Linux - see https://supabase.com/docs/guides/cli
-```
-
-Start local Supabase:
-
-```bash
-supabase start
-```
-
-This will output your local credentials. Copy the `anon key` and `API URL` to your `.env`.
-
-Create the storage bucket:
-
-```bash
-# The bucket should be created automatically via migrations
-# If not, create manually in Supabase Studio at http://127.0.0.1:54323
-```
-
-### 3b. Supabase Setup (Cloud)
-
-1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard)
-2. Go to **Settings → API** and copy:
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. Go to **Storage** and create a bucket:
-   - Name: `media`
-   - Public: **Yes** (toggle on)
-
-### 4. Run Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-## Available Scripts
+## Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
+| `npm run dev` | Start Next.js dev server |
+| `npm run build` | Production build |
+| `supabase start` | Start local Supabase |
+| `supabase stop` | Stop local Supabase |
+| `supabase db push` | Apply migrations to linked DB |
+| `supabase db reset` | Reset local DB (⚠️ destroys data) |
+| `supabase link --project-ref <id>` | Link to Supabase project |
+
+## Database Migrations
+
+**Local:**
+```bash
+supabase link --project-ref local
+supabase db push
+```
+
+**Production/Cloud:**
+```bash
+supabase link --project-ref <your-project-id>
+supabase db push
+```
+
+**Create new migration:**
+```bash
+supabase migration new your_migration_name
+# Edit file in supabase/migrations/
+supabase db push
+```
+
+**Reset local DB:**
+```bash
+supabase db reset  # Drops everything, re-runs all migrations
+```
+
+⚠️ Never edit old migrations—create new ones. Files run in timestamp order.
+
+## Deployment
+
+**Vercel:**
+- Push to `main` → auto-deploys to production
+- Set env vars in Vercel dashboard (Project Settings → Environment Variables)
+- Apply migrations to production: `supabase link --project-ref <prod-id>` then `supabase db push`
 
 ## Project Structure
 
@@ -210,16 +209,9 @@ Currently supports `test` workflow ID (mock workflow). Full Supabase integration
 
 ## Troubleshooting
 
-### "Failed to upload to Supabase: fetch failed"
-
-Supabase is not running or not reachable. If using local Supabase:
-
-```bash
-supabase start
-```
-
-If using cloud Supabase, verify your URL and key in `.env`.
-
-### "No images generated" / Fal.ai errors
-
-Check your `FAL_KEY` is valid at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys).
+| Issue | Fix |
+|-------|-----|
+| "Failed to upload to Supabase" | `supabase start` or check cloud URL/key in `.env.local` |
+| "No images generated" / Fal errors | Verify `FAL_KEY` at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys) |
+| "Migration failed" | Check syntax, try `supabase db reset` locally |
+| Build fails on Vercel | Set env vars in Vercel dashboard, test `npm run build` locally |
