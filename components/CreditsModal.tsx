@@ -28,6 +28,8 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
   const [creditsData, setCreditsData] = useState<CreditsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAmount, setSelectedAmount] = useState<10 | 20 | 50>(10);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -63,6 +65,28 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
 
     fetchCredits();
   }, [isOpen]);
+
+  const handleTopUp = async () => {
+    setIsCheckingOut(true);
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: selectedAmount }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err) {
+      console.error("Error creating checkout session:", err);
+      setError(err instanceof Error ? err.message : "Failed to start checkout");
+      setIsCheckingOut(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -144,9 +168,39 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
             <>
               {/* Balance Section - Two Column Layout */}
               <div className="grid grid-cols-2 gap-6 border-b border-neutral-200 px-6 py-8 dark:border-neutral-700">
-                {/* Left: Top Up Button */}
-                <div className="flex items-center justify-center">
-                  <button className="group relative w-full max-w-xs flex justify-center py-3 px-6 border border-transparent text-sm font-medium rounded-md text-white bg-neutral-800 hover:bg-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 transition-colors">
+                {/* Left: Top Up Section */}
+                <div className="flex flex-col justify-center space-y-4">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    Select Amount
+                  </div>
+
+                  {/* Radio buttons for amount selection */}
+                  <div className="space-y-2">
+                    {[10, 20, 50].map((amount) => (
+                      <label
+                        key={amount}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="amount"
+                          value={amount}
+                          checked={selectedAmount === amount}
+                          onChange={() => setSelectedAmount(amount as 10 | 20 | 50)}
+                          className="h-4 w-4 text-neutral-800 focus:ring-neutral-500 dark:text-neutral-200"
+                        />
+                        <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                          ${amount} USD
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleTopUp}
+                    disabled={isCheckingOut}
+                    className="group relative w-full flex justify-center py-3 px-6 border border-transparent text-sm font-medium rounded-md text-white bg-neutral-800 hover:bg-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 mr-2"
@@ -160,7 +214,7 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Top Up Credits
+                    {isCheckingOut ? "Redirecting..." : "Top Up Credits"}
                   </button>
                 </div>
 
