@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { CreditsModal } from "./CreditsModal";
 
 export function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -51,13 +53,23 @@ export function UserProfile() {
     router.refresh();
   };
 
+  const handleCreditsClick = () => {
+    setIsOpen(false);
+    setIsCreditsModalOpen(true);
+  };
+
   if (!user) return null;
 
   return (
-    <div
-      className="relative border-t border-neutral-200 p-2 dark:border-neutral-700"
-      ref={dropdownRef}
-    >
+    <>
+      <CreditsModal
+        isOpen={isCreditsModalOpen}
+        onClose={() => setIsCreditsModalOpen(false)}
+      />
+      <div
+        className="relative border-t border-neutral-200 p-2 dark:border-neutral-700"
+        ref={dropdownRef}
+      >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center gap-3 rounded-lg px-2 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -89,8 +101,27 @@ export function UserProfile() {
       {isOpen && (
         <div className="absolute bottom-full left-4 right-4 mb-2 rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           <button
+            onClick={handleCreditsClick}
+            className="flex w-full items-center gap-2 rounded-t-lg px-4 py-2 text-left text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Credits
+          </button>
+          <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+            className="flex w-full items-center gap-2 rounded-b-lg px-4 py-2 text-left text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -108,6 +139,7 @@ export function UserProfile() {
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
