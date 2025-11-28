@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@fal-ai/client": "^1.7.2",
-    "@supabase/supabase-js": "^2.85.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.86.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "next": "16.0.4",

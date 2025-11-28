@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import type { NodeType } from "@/types/nodes";
+import { UserProfile } from "./UserProfile";
 
 interface NodeTypeConfig {
   type: NodeType;
@@ -317,26 +318,30 @@ function NodeList({ nodes }: { nodes: NodeTypeConfig[] }) {
 
 export function Sidebar() {
   return (
-    <aside className="w-52 overflow-y-auto border-r border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        Workflow
-      </h2>
-      <NodeList nodes={workflowNodeTypes} />
+    <aside className="flex h-full w-52 flex-col border-r border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="flex-1 overflow-y-auto p-4">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Workflow
+        </h2>
+        <NodeList nodes={workflowNodeTypes} />
 
-      <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        Data
-      </h2>
-      <NodeList nodes={dataNodeTypes} />
+        <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Data
+        </h2>
+        <NodeList nodes={dataNodeTypes} />
 
-      <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        Models
-      </h2>
-      <NodeList nodes={modelNodeTypes} />
+        <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Models
+        </h2>
+        <NodeList nodes={modelNodeTypes} />
 
-      <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        Output
-      </h2>
-      <NodeList nodes={outputNodeTypes} />
+        <h2 className="mb-4 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Output
+        </h2>
+        <NodeList nodes={outputNodeTypes} />
+      </div>
+
+      <UserProfile />
     </aside>
   );
 }
