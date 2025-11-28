@@ -42,6 +42,11 @@ CREATE POLICY "Users can update own credits"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- Allow inserts for new user creation (trigger needs this)
+CREATE POLICY "Allow user creation inserts"
+  ON user_credits FOR INSERT
+  WITH CHECK (true);
+
 -- Users can view their own transactions
 CREATE POLICY "Users can view own transactions"
   ON credit_transactions FOR SELECT
@@ -55,10 +60,19 @@ CREATE POLICY "Users can insert own transactions"
 -- Function to automatically create credits record for new users
 CREATE OR REPLACE FUNCTION public.create_user_credits()
 RETURNS TRIGGER AS $$
+DECLARE
+  insert_error TEXT;
 BEGIN
-  INSERT INTO public.user_credits (user_id, balance)
-  VALUES (NEW.id, 10.00) -- Give new users $10 to start
-  ON CONFLICT (user_id) DO NOTHING;
+  BEGIN
+    INSERT INTO public.user_credits (user_id, balance)
+    VALUES (NEW.id, 10.00) -- Give new users $10 to start
+    ON CONFLICT (user_id) DO NOTHING;
+  EXCEPTION
+    WHEN OTHERS THEN
+      insert_error := SQLERRM;
+      RAISE LOG 'Error creating user credits for user %: %', NEW.id, insert_error;
+      RAISE EXCEPTION 'Database error saving new user: %', insert_error;
+  END;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
