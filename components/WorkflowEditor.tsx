@@ -13,13 +13,17 @@ interface WorkflowEditorProps {
   workflow: Workflow;
 }
 
-export function WorkflowEditor({ workflow: initialWorkflow }: WorkflowEditorProps) {
+export function WorkflowEditor({
+  workflow: initialWorkflow,
+}: WorkflowEditorProps) {
   const canvasRef = useRef<CanvasRef>(null);
   const [workflow, setWorkflow] = useState(initialWorkflow);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const [pendingNameChange, setPendingNameChange] = useState<string | null>(null);
+  const [pendingNameChange, setPendingNameChange] = useState<string | null>(
+    null
+  );
   const justSavedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Set current workflow ID for storage adapter
@@ -41,9 +45,12 @@ export function WorkflowEditor({ workflow: initialWorkflow }: WorkflowEditorProp
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const handleDirtyChange = useCallback((isDirty: boolean) => {
-    setHasUnsavedChanges(isDirty || pendingNameChange !== null);
-  }, [pendingNameChange]);
+  const handleDirtyChange = useCallback(
+    (isDirty: boolean) => {
+      setHasUnsavedChanges(isDirty || pendingNameChange !== null);
+    },
+    [pendingNameChange]
+  );
 
   const handleNameChange = useCallback((name: string) => {
     setPendingNameChange(name);

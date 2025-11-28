@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RunsPanel } from "./RunsPanel";
-import { exportWorkflow, parseWorkflowImport } from "@/lib/workflow/exportImport";
+import { WorkflowListModal } from "./WorkflowListModal";
+import {
+  exportWorkflow,
+  parseWorkflowImport,
+} from "@/lib/workflow/exportImport";
 import type { Workflow } from "@/types/database";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -31,6 +35,7 @@ export function WorkflowHeader({
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(workflow.name);
   const [showRuns, setShowRuns] = useState(false);
+  const [showWorkflowList, setShowWorkflowList] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +189,13 @@ export function WorkflowHeader({
 
       <div className="flex items-center gap-2">
         <button
+          onClick={() => setShowWorkflowList(true)}
+          className="rounded px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          title="View all workflows"
+        >
+          Workflows
+        </button>
+        <button
           onClick={() => {
             const endpoint = `${window.location.origin}/api/workflows/${workflow.id}/run`;
             navigator.clipboard.writeText(endpoint);
@@ -242,7 +254,7 @@ export function WorkflowHeader({
           disabled={!hasUnsavedChanges || isSaving}
           className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSaving ? "Saving..." : "Save"}
+          Save
         </button>
       </div>
 
@@ -250,6 +262,11 @@ export function WorkflowHeader({
         workflowId={workflow.id}
         isOpen={showRuns}
         onClose={() => setShowRuns(false)}
+      />
+      <WorkflowListModal
+        isOpen={showWorkflowList}
+        onClose={() => setShowWorkflowList(false)}
+        currentWorkflowId={workflow.id}
       />
     </header>
   );
