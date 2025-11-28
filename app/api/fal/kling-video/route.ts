@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     // 3. Check credits and deduct BEFORE calling Fal.ai
     const { transactionId: txId, cost } = await checkAndDeductCredits(
       user.id,
-      "fal-ai/kling-video/v2/master"
+      "fal-ai/kling-video/v2.5-turbo/pro/text-to-video"
     );
     transactionId = txId;
 
