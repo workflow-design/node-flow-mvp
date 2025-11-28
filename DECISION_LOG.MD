@@ -563,4 +563,67 @@ POST /api/workflows/test/run
 
 ---
 
+### 2025-11-28 — User-Based Workflow Protection with RLS
+
+**Decision:** Add `user_id` column to workflows table with Row Level Security policies to prevent users from accessing workflows owned by others.
+
+**Context:** Multiple users can authenticate, but workflows were not protected by user ownership, allowing any authenticated user to view or edit any workflow.
+
+**Key Choices:**
+
+1. **Required Foreign Key:** `user_id` column references `auth.users(id)` and is NOT NULL
+   - Rationale: Every workflow must have an owner; prevents orphaned workflows
+   - Consequence: All existing workflows need backfilling (or migration runs on fresh DB)
+
+2. **Row Level Security (RLS):** Postgres RLS policies on both `workflows` and `workflow_runs` tables
+   - Rationale: Database-level enforcement is more secure than application-level checks
+   - Consequence: All queries automatically filtered by user, even if app code has bugs
+
+3. **Cascading Policies:** Workflow runs inherit access control from workflow ownership
+   - Rationale: Users should only see runs for their own workflows
+   - Consequence: Single workflow query check protects entire execution history
+
+4. **Authenticated Client Migration:** Replaced global `supabase` client with per-request `createClient()`
+   - Server pages: `createClient()` from `@/lib/supabase/server`
+   - Client components: `createClient()` from `@/lib/supabase/client`
+   - Rationale: Each request needs its own auth context for RLS to work
+   - Consequence: All Supabase operations now use user's session token
+
+5. **Auth Checks in Pages:** Added `getUser()` checks with redirects to `/login` if unauthenticated
+   - Rationale: Protects workflow editor pages at the route level
+   - Consequence: Users cannot access workflow pages without logging in
+
+**Files Created:**
+- `supabase/migrations/20250128000000_add_user_id_to_workflows.sql` — Migration with user_id column and RLS policies
+
+**Files Modified:**
+- `app/workflows/new/page.tsx` — Added auth check, includes user_id on insert
+- `app/workflows/[id]/page.tsx` — Added auth check, RLS enforces ownership
+- `app/workflows/[id]/debug/page.tsx` — Added auth check
+- `app/api/workflows/route.ts` — Auth checks on create/list operations
+- `app/api/workflows/[id]/run/route.ts` — Auth check before workflow execution
+- `app/api/workflows/[id]/runs/route.ts` — Auth check before fetching runs
+- `app/api/workflows/[id]/schema/route.ts` — Auth check before schema access
+- `components/WorkflowEditor.tsx` — Uses client-side authenticated client
+- `lib/storage/supabaseWorkflowStorage.ts` — Uses client-side authenticated client
+
+**Security Model:**
+```sql
+-- Users can only:
+SELECT   from workflows WHERE user_id = auth.uid()
+INSERT   into workflows VALUES (user_id = auth.uid())
+UPDATE   workflows WHERE user_id = auth.uid()
+DELETE   from workflows WHERE user_id = auth.uid()
+
+-- Workflow runs inherit access control via subquery
+```
+
+**Consequences:**
+- Users cannot view, edit, or run workflows they don't own
+- Database enforces access control even if application code is bypassed
+- All API routes now check authentication before processing requests
+- 404 response returned for workflows that exist but user doesn't own (prevents information disclosure)
+
+---
+
 <!-- Add new decisions above this line -->

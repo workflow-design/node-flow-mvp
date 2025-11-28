@@ -1,6 +1,7 @@
--- Create a storage bucket for images and videos
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('media', 'media', true);
+-- Create a storage bucket for images and videos (if not exists)
+INSERT INTO storage.buckets (id, name)
+VALUES ('media', 'media')
+ON CONFLICT (id) DO NOTHING;
 
 -- Set up storage policies to allow public access
 CREATE POLICY "Public Access"

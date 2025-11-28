@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const { data: workflow, error } = await supabase
@@ -12,6 +21,7 @@ export async function POST(request: Request) {
         description: body.description,
         graph: body.graph || { nodes: [], edges: [] },
         default_inputs: body.default_inputs || {},
+        user_id: user.id,
       })
       .select()
       .single();
@@ -33,6 +43,16 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const supabase = await createClient();
+
+  // Get the authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // RLS will automatically filter workflows by user_id
   const { data: workflows, error } = await supabase
     .from("workflows")
     .select("id, name, description, created_at, updated_at")

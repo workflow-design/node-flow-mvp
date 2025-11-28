@@ -1,6 +1,6 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { DebugRunner } from "@/components/debug/DebugRunner";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { extractWorkflowSchema } from "@/lib/workflow/schema";
 import type { Workflow, WorkflowGraph } from "@/types/database";
 
@@ -10,7 +10,16 @@ interface PageProps {
 
 export default async function DebugPage({ params }: PageProps) {
   const { id } = await params;
+  const supabase = await createClient();
 
+  // Get the authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  // RLS will automatically prevent access to workflows not owned by the user
   const { data: workflow, error } = await supabase
     .from("workflows")
     .select("*")

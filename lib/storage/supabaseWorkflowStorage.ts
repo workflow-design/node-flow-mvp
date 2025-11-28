@@ -1,5 +1,5 @@
 import type { WorkflowStorage, WorkflowData } from "../storage";
-import { supabase } from "../supabase";
+import { createClient } from "@/lib/supabase/client";
 import type { WorkflowGraph } from "@/types/database";
 
 let currentWorkflowId: string | null = null;
@@ -24,6 +24,8 @@ export const supabaseWorkflowStorage: WorkflowStorage = {
       edges: data.edges,
     };
 
+    const supabase = createClient();
+
     const { error } = await supabase
       .from("workflows")
       .update({ graph })
@@ -37,6 +39,8 @@ export const supabaseWorkflowStorage: WorkflowStorage = {
 
   async load(): Promise<WorkflowData | null> {
     if (!currentWorkflowId) return null;
+
+    const supabase = createClient();
 
     const { data: workflow, error } = await supabase
       .from("workflows")
@@ -55,6 +59,8 @@ export const supabaseWorkflowStorage: WorkflowStorage = {
 
   async clear(): Promise<void> {
     if (!currentWorkflowId) return;
+
+    const supabase = createClient();
 
     await supabase
       .from("workflows")

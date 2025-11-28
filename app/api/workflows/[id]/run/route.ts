@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { runWorkflow } from "@/lib/workflow/runner";
 import type { Workflow, WorkflowGraph } from "@/types/database";
 
@@ -11,9 +11,18 @@ export async function POST(request: Request, { params }: RouteParams) {
   const { id } = await params;
 
   try {
+    const supabase = await createClient();
+
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => ({}));
 
-    // Fetch workflow from database
+    // Fetch workflow from database (RLS will ensure user owns it)
     const { data: workflow, error: fetchError } = await supabase
       .from("workflows")
       .select("*")

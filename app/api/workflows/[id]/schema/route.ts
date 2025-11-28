@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { extractWorkflowSchema } from "@/lib/workflow/schema";
 import type { Workflow, WorkflowGraph } from "@/types/database";
 
@@ -9,8 +9,16 @@ interface RouteParams {
 
 export async function GET(_request: Request, { params }: RouteParams) {
   const { id } = await params;
+  const supabase = await createClient();
 
-  // Fetch workflow from database
+  // Get the authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Fetch workflow from database (RLS will ensure user owns it)
   const { data: workflow, error } = await supabase
     .from("workflows")
     .select("graph")

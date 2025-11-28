@@ -6,7 +6,7 @@ import { Canvas, type CanvasRef } from "./Canvas";
 import { Sidebar } from "./Sidebar";
 import { WorkflowHeader } from "./WorkflowHeader";
 import { storage, setCurrentWorkflowId } from "@/lib/storage/index";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import type { Workflow } from "@/types/database";
 
 interface WorkflowEditorProps {
@@ -57,6 +57,7 @@ export function WorkflowEditor({ workflow: initialWorkflow }: WorkflowEditorProp
 
     try {
       const graph = canvasRef.current.getGraph();
+      const supabase = createClient();
 
       // Save graph via storage adapter
       await storage.save(graph);
