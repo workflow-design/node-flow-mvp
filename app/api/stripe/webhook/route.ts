@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -61,7 +61,10 @@ export async function POST(request: Request) {
 
     try {
       console.log("[Webhook] Creating Supabase client");
-      const supabase = await createClient();
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
       // Get current balance
       console.log("[Webhook] Fetching user credits for userId:", userId);
