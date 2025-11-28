@@ -1,60 +1,66 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
+import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 
 export function UserProfile() {
-  const [user, setUser] = useState<User | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
     const getUser = async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-    }
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
 
-    getUser()
+    getUser();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+      setUser(session?.user ?? null);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
-    <div className="relative border-t border-neutral-200 p-4 dark:border-neutral-700" ref={dropdownRef}>
+    <div
+      className="relative border-t border-neutral-200 p-2 dark:border-neutral-700"
+      ref={dropdownRef}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        className="flex w-full items-center gap-3 rounded-lg px-2 py-1 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white">
           {user.email?.[0].toUpperCase()}
@@ -66,7 +72,9 @@ export function UserProfile() {
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`h-4 w-4 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-neutral-500 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -82,7 +90,7 @@ export function UserProfile() {
         <div className="absolute bottom-full left-4 right-4 mb-2 rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+            className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -101,5 +109,5 @@ export function UserProfile() {
         </div>
       )}
     </div>
-  )
+  );
 }
