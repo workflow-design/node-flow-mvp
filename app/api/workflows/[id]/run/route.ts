@@ -13,16 +13,9 @@ export async function POST(request: Request, { params }: RouteParams) {
   try {
     const supabase = await createClient();
 
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json().catch(() => ({}));
 
-    // Fetch workflow from database (RLS will ensure user owns it)
+    // Fetch workflow from database (publicly accessible, no auth required)
     const { data: workflow, error: fetchError } = await supabase
       .from("workflows")
       .select("*")
